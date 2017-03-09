@@ -1,5 +1,6 @@
 from os.path import join
 import logging
+import os
 
 ########################################################################################################################
 # Connection/Auth
@@ -90,7 +91,10 @@ API_ERROR_INTERVAL = 10
 DRY_BTC = 50
 
 # Available levels: logging.(DEBUG|INFO|WARN|ERROR)
-LOG_LEVEL = logging.INFO
+if os.environ.get('RUN_ENV') == 'test':
+    LOG_LEVEL = logging.DEBUG
+else:
+    LOG_LEVEL = logging.INFO
 
 # To uniquely identify orders placed by this bot, the bot sends a ClOrdID (Client order ID) that is attached
 # to each order so its source can be identified. This keeps the market maker from cancelling orders that are

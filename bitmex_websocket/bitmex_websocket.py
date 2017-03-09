@@ -8,7 +8,7 @@ import uuid
 import logging
 from bitmex_websocket.auth import AccessTokenAuth, APIKeyAuthWithExpires
 from bitmex_websocket.utils import constants, errors
-from bitmex_websocket.ws import BitMEXWebsocket
+from bitmex_websocket.websocket import BitMEXWebsocket
 
 
 # https://www.bitmex.com/api/explorer/
@@ -16,11 +16,10 @@ class BitMEX(object):
 
     """BitMEX API Connector."""
 
-    def __init__(self, base_url=None, symbol=None, login=None, password=None, otpToken=None,
+    def __init__(self, symbol=None, login=None, password=None, otpToken=None,
                  apiKey=None, apiSecret=None, orderIDPrefix='mm_bitmex_', shouldWSAuth=True):
         """Init connector."""
         self.logger = logging.getLogger('root')
-        self.base_url = base_url
         self.symbol = symbol
         self.token = None
         # User/pass auth is no longer supported
@@ -42,7 +41,7 @@ class BitMEX(object):
 
         # Create websocket for streaming data
         self.ws = BitMEXWebsocket()
-        self.ws.connect(base_url, symbol, shouldAuth=shouldWSAuth)
+        self.ws.connect(symbol, shouldAuth=shouldWSAuth)
 
     #
     # Public methods

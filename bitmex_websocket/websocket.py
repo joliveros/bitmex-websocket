@@ -7,48 +7,33 @@ import json
 import decimal
 import logging
 from bitmex_websocket.settings import settings
-# from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
+from bitmex_websocket.utils.log import setup_custom_logger
+from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
 from future.utils import iteritems
 from future.standard_library import hooks
 with hooks():  # Python 2/3 compat
     from urllib.parse import urlparse, urlunparse
 
 
-# Connects to BitMEX websocket for streaming realtime data.
-# The Marketmaker still interacts with this as if it were a REST Endpoint, but now it can get
-# much more realtime data without heavily polling the API.
-#
 # The Websocket offers a bunch of data as raw properties right on the object.
 # On connect, it synchronously asks for a push of all this data then returns.
-# Right after, the MM can start using its data. It will be updated in realtime, so the MM can
-# poll as often as it wants.
+# Right after, the MM can start using its data. It will be updated in realtime,
+# so the user can poll as often as it wants.
 class BitMEXWebsocket():
 
     # Don't grow a table larger than this amount. Helps cap memory usage.
     MAX_TABLE_LEN = 200
 
     def __init__(self):
-        self.logger = logging.getLogger('root')
+        self.logger = setup_custom_logger('BitMEXWebsocket')
         self.__reset()
 
-    def connect(self, endpoint="", symbol="XBTH17", shouldAuth=True):
+    def connect(self, symbol="XBTH17", shouldAuth=None):
         '''Connect to the websocket and initialize data stores.'''
-
         self.logger.debug("Connecting WebSocket.")
         self.symbol = symbol
-        self.shouldAuth = shouldAuth
+        self.connect_websocket()
 
-        # if self.shouldAuth:
-        #     subscriptions += [sub + ':' + symbol for sub in ["order", "execution"]]
-        #     subscriptions += ["margin", "position"]
-
-        # Get WS URL and connect.
-        urlParts = list(urlparse(endpoint))
-        urlParts[0] = urlParts[0].replace('http', 'ws')
-        urlParts[2] = "/realtime"
-        wsURL = urlunparse(urlParts)
-        self.logger.info("Connecting to %s" % wsURL)
-        self.__connect(wsURL)
         self.logger.info('Connected to WS. Waiting for data images, this may take a moment...')
 
         # Connected. Wait for partials
@@ -56,6 +41,17 @@ class BitMEXWebsocket():
         # if self.shouldAuth:
         #     self.__wait_for_account()
         # self.logger.info('Got all market data. Starting.')
+
+    def build_websocket_url(self, base_url=settings.BASE_URL):
+        self.logger.debug('Build websocket url from: %s' % (base_url))
+
+        urlParts = list(urlparse(base_url))
+        urlParts[0] = urlParts[0].replace('http', 'ws')
+        urlParts[2] = "/realtime"
+
+        url = urlunparse(urlParts)
+        self.logger.debug(url)
+        return url
 
     def subscribe(self, channel):
         channel = "{}:{}".format(channel, self.symbol)
@@ -138,13 +134,11 @@ class BitMEXWebsocket():
         self.exited = True
         self.ws.close()
 
-    #
-    # Private methods
-    #
-
-    def __connect(self, wsURL):
+    def connect_websocket(self):
+        wsURL = self.build_websocket_url()
         '''Connect to the websocket in a thread.'''
         self.logger.debug("Starting thread")
+        self.logger.debug("Connecting to %s" % (wsURL))
 
         self.ws = websocket.WebSocketApp(wsURL,
                                          on_message=self.__on_message,
@@ -160,9 +154,12 @@ class BitMEXWebsocket():
         self.wst.start()
         self.logger.info("Started thread")
 
-        self.__connection_timeout()
+        self.connect_websocketion_timeout()
 
-    def __connection_timeout(self):
+    #
+    # Private methods
+    #
+    def connect_websocketion_timeout(self):
         # Wait for connect before continuing
         conn_timeout = 4
         while (not self.ws.sock or not self.ws.sock.connected) and conn_timeout and not self._error:
