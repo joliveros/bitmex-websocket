@@ -12,6 +12,7 @@ py==1.4.32
 pytest==3.0.6
 pytest-cov==2.4.0
 pytest-env==0.6.0
+pytest-mock==1.5.0
 pytest-watch==4.1.0
 PyYAML==3.12
 requests==2.13.0
