@@ -20,14 +20,17 @@ def test_build_websocket_url(mocker):
 
     assert url == 'wss://testnet.bitmex.com/realtime'
 
+
 def test_subscribe_to_channel(mocker):
-    send_message = mocker.patch('bitmex_websocket.websocket.BitMEXWebsocket.send_message')
+    send_message = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.send_message')
     socket = BitMEXWebsocket()
     socket.symbol = 'test_symbol'
     socket.subscribe('test_channel')
 
     send_message.assert_called_with(
         {'op': 'subscribe', 'args': ['test_channel:test_symbol']})
+
 
 @pytest.mark.xfail
 def test_should_fail(self):
