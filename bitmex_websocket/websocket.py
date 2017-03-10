@@ -57,10 +57,11 @@ class BitMEXWebsocket():
         channel = "{}:{}".format(channel, self.symbol)
         subscriptionMsg = {"op": "subscribe", "args": [channel]}
 
-        # while not self.is_connected():
-        #     sleep(1)
         self.logger.info(subscriptionMsg)
-        self.ws.send(json.dumps(subscriptionMsg))
+        self.send_message(subscriptionMsg)
+
+    def send_message(self, message):
+        self.ws.send(json.dumps(message))
 
     #
     # Data methods
