@@ -5,7 +5,9 @@ docopt==0.6.2
 future==0.16.0
 gevent==1.2.1
 greenlet==0.4.12
+mock==2.0.0
 pathtools==0.1.2
+pbr==2.0.0
 py==1.4.32
 pytest==3.0.6
 pytest-cov==2.4.0
@@ -13,5 +15,6 @@ pytest-env==0.6.0
 pytest-watch==4.1.0
 PyYAML==3.12
 requests==2.13.0
+six==1.10.0
 watchdog==0.8.3
 websocket==0.2.1
