@@ -13,7 +13,7 @@ from bitmex_websocket.settings import settings
 from bitmex_websocket.utils.log import setup_custom_logger
 from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
 from future.utils import iteritems
-from urllib.parse import urlparse, urlunparse, urlencode
+from urllib.parse import urlparse
 
 
 # The Websocket offers a bunch of data as raw properties right on the object.
