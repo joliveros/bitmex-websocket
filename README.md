@@ -49,7 +49,8 @@ Run your tests with ```py.test``` in the root directory.
 Coverage is ran by default and is set in the ```pytest.ini``` file.
 To see an html output of coverage open ```htmlcov/index.html``` after running the tests.
 
-## Travis CI
-
-There is a ```.travis.yml``` file that is set up to run your tests for python 2.7
-and python 3.2, should you choose to use it.
+## Examples
+  Run example scripts:
+  ```bash
+  RUN_ENV=test python -m examples.example-1
+  ```
