@@ -12,7 +12,7 @@ from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
 from future.utils import iteritems
 from future.standard_library import hooks
 with hooks():  # Python 2/3 compat
-    from urllib.parse import urlparse, urlunparse
+    from urllib.parse import urlparse, urlunparse, urlencode
 
 
 # The Websocket offers a bunch of data as raw properties right on the object.
@@ -28,13 +28,22 @@ class BitMEXWebsocket():
         self.logger = setup_custom_logger('BitMEXWebsocket')
         self.__reset()
 
-    def connect(self, symbol="XBTH17", shouldAuth=None):
+    def connect(
+            self,
+            symbol="XBTH17",
+            shouldAuth=False,
+            websocket=None,
+            heartbeatEnabled=True):
         '''Connect to the websocket and initialize data stores.'''
+
         self.logger.debug("Connecting WebSocket.")
         self.symbol = symbol
+        self.shouldAuth = shouldAuth
+        self.heartbeatEnabled = heartbeatEnabled
         self.connect_websocket()
 
-        self.logger.info('Connected to WS. Waiting for data images, this may take a moment...')
+        self.logger.info('Connected to WS. Waiting for data images, this may \
+        take a moment...')
 
         # Connected. Wait for partials
         # self.__wait_for_symbol(symbol)
@@ -47,11 +56,37 @@ class BitMEXWebsocket():
 
         urlParts = list(urlparse(base_url))
         urlParts[0] = urlParts[0].replace('http', 'ws')
-        urlParts[2] = "/realtime"
+        urlParts[2] = 'realtime'
+        if self.heartbeatEnabled:
+            urlParts[4] = urlencode({'heartbeat': 'true'})
 
         url = urlunparse(urlParts)
+
         self.logger.debug(url)
         return url
+
+    def connect_websocket(self):
+        wsURL = self.build_websocket_url()
+        '''Connect to the websocket in a thread.'''
+        self.logger.debug("Starting thread")
+        self.logger.debug("Connecting to %s" % (wsURL))
+        return
+        self.ws = websocket.WebSocketApp(wsURL,
+                                         on_message=self.__on_message,
+                                         on_close=self.__on_close,
+                                         on_open=self.__on_open,
+                                         on_error=self.__on_error,
+                                         # We can login using
+                                         #  email/pass or API key
+                                         header=self.__get_auth())
+
+        self.wst = threading.Thread(target=lambda: self.ws.run_forever())
+        self.wst.daemon = True
+        self.wst.start()
+        self.logger.info("Started thread")
+
+        self.connect_websocketion_timeout()
+
 
     def subscribe(self, channel):
         channel = "{}:{}".format(channel, self.symbol)
@@ -66,6 +101,7 @@ class BitMEXWebsocket():
     #
     # Data methods
     #
+
     def get_instrument(self, symbol):
         instruments = self.data['instrument']
         matchingInstruments = [i for i in instruments if i['symbol'] == symbol]
@@ -135,27 +171,6 @@ class BitMEXWebsocket():
         self.exited = True
         self.ws.close()
 
-    def connect_websocket(self):
-        wsURL = self.build_websocket_url()
-        '''Connect to the websocket in a thread.'''
-        self.logger.debug("Starting thread")
-        self.logger.debug("Connecting to %s" % (wsURL))
-
-        self.ws = websocket.WebSocketApp(wsURL,
-                                         on_message=self.__on_message,
-                                         on_close=self.__on_close,
-                                         on_open=self.__on_open,
-                                         on_error=self.__on_error,
-                                         # We can login using
-                                         #  email/pass or API key
-                                         header=self.__get_auth())
-
-        self.wst = threading.Thread(target=lambda: self.ws.run_forever())
-        self.wst.daemon = True
-        self.wst.start()
-        self.logger.info("Started thread")
-
-        self.connect_websocketion_timeout()
 
     #
     # Private methods
