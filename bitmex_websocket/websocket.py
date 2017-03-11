@@ -1,3 +1,6 @@
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from builtins import *
 import sys
 import websocket
 import threading
@@ -10,9 +13,7 @@ from bitmex_websocket.settings import settings
 from bitmex_websocket.utils.log import setup_custom_logger
 from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
 from future.utils import iteritems
-from future.standard_library import hooks
-with hooks():  # Python 2/3 compat
-    from urllib.parse import urlparse, urlunparse, urlencode
+from urllib.parse import urlparse, urlunparse, urlencode
 
 
 # The Websocket offers a bunch of data as raw properties right on the object.
@@ -55,13 +56,11 @@ class BitMEXWebsocket():
         self.logger.debug('Build websocket url from: %s' % (base_url))
 
         urlParts = list(urlparse(base_url))
-        urlParts[0] = urlParts[0].replace('http', 'ws')
-        urlParts[2] = 'realtime'
+        queryString = ''
         if self.heartbeatEnabled:
-            urlParts[4] = urlencode({'heartbeat': 'true'})
+            queryString = '?heartbeat=true'
 
-        url = urlunparse(urlParts)
-
+        url = "wss://{}/realtime{}".format(urlParts[1], queryString)
         self.logger.debug(url)
         return url
 
