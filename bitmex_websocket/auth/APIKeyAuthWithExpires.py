@@ -10,20 +10,20 @@ with hooks():  # Python 2/3 compat
 
 class APIKeyAuthWithExpires(AuthBase):
 
-    """Attaches API Key Authentication to the given Request object. This implementation uses `expires`."""
+    '''Attaches API Key Authentication to the given Request object. This implementation uses `expires`.'''
 
     def __init__(self, apiKey, apiSecret):
-        """Init with Key & Secret."""
+        '''Init with Key & Secret.'''
         self.apiKey = apiKey
         self.apiSecret = apiSecret
 
     def __call__(self, r):
-        """
+        '''
         Called when forming a request - generates api key headers. This call uses `expires` instead of nonce.
 
         This way it will not collide with other processes using the same API Key if requests arrive out of order.
         For more details, see https://www.bitmex.com/app/apiKeys
-        """
+        '''
         # modify and return the request
         expires = int(round(time.time()) + 5)  # 5s grace period in case of clock skew
         r.headers['api-expires'] = str(expires)
@@ -46,7 +46,7 @@ class APIKeyAuthWithExpires(AuthBase):
     # signature =
     #   HEX(HMAC_SHA256(secret, 'POST/api/v1/order1416993995705{"symbol":"XBTZ14","quantity":1,"price":395.01}'))
     def generate_signature(self, secret, verb, url, nonce, data):
-        """Generate a request signature compatible with BitMEX."""
+        '''Generate a request signature compatible with BitMEX.'''
         # Parse the url so we can remove the base and extract just the path.
         parsedURL = urlparse(url)
         path = parsedURL.path

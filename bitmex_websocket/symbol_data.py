@@ -1,4 +1,4 @@
-"""BitMEX API Connector."""
+'''BitMEX API Connector.'''
 from __future__ import absolute_import
 import requests
 from time import sleep
@@ -14,11 +14,11 @@ from bitmex_websocket.websocket import BitMEXWebsocket
 # https://www.bitmex.com/api/explorer/
 class BitMEXSymbolData(object):
 
-    """BitMEX API Connector."""
+    '''BitMEX API Connector.'''
 
     def __init__(self, symbol=None, login=None, password=None, otpToken=None,
                  apiKey=None, apiSecret=None, orderIDPrefix='mm_bitmex_', shouldWSAuth=True):
-        """Init connector."""
+        '''Init connector.'''
         self.logger = logging.getLogger('root')
         self.symbol = symbol
         self.token = None
@@ -47,19 +47,19 @@ class BitMEXSymbolData(object):
     # Public methods
     #
     def ticker_data(self, symbol):
-        """Get ticker data."""
+        '''Get ticker data.'''
         return self.ws.get_ticker(symbol)
 
     def instrument(self, symbol):
-        """Get an instrument's details."""
+        '''Get an instrument's details.'''
         return self.ws.get_instrument(symbol)
 
     def market_depth(self, symbol):
-        """Get market depth / orderbook."""
+        '''Get market depth / orderbook.'''
         return self.ws.market_depth(symbol)
 
     def recent_trades(self, symbol):
-        """Get recent trades.
+        '''Get recent trades.
 
         Returns
         -------
@@ -69,14 +69,14 @@ class BitMEXSymbolData(object):
                u'price': 8.7401099999999996,
                u'tid': u'93842'},
 
-        """
+        '''
         return self.ws.recent_trades(symbol)
 
     #
     # Authentication required methods
     #
     def authentication_required(function):
-        """Annotation for methods that require auth."""
+        '''Annotation for methods that require auth.'''
         def wrapped(self, *args, **kwargs):
             if not (self.apiKey):
                 msg = "You must be authenticated to use this method"
@@ -87,33 +87,33 @@ class BitMEXSymbolData(object):
 
     @authentication_required
     def funds(self):
-        """Get your current balance."""
+        '''Get your current balance.'''
         return self.ws.funds()
 
     @authentication_required
     def position(self, symbol):
-        """Get your open position."""
+        '''Get your open position.'''
         return self.ws.position(symbol)
 
     @authentication_required
     def buy(self, quantity, price):
-        """Place a buy order.
+        '''Place a buy order.
 
         Returns order object. ID: orderID
-        """
+        '''
         return self.place_order(quantity, price)
 
     @authentication_required
     def sell(self, quantity, price):
-        """Place a sell order.
+        '''Place a sell order.
 
         Returns order object. ID: orderID
-        """
+        '''
         return self.place_order(-quantity, price)
 
     @authentication_required
     def place_order(self, quantity, price):
-        """Place an order."""
+        '''Place an order.'''
         if price < 0:
             raise Exception("Price must be positive.")
 
@@ -130,12 +130,12 @@ class BitMEXSymbolData(object):
 
     @authentication_required
     def amend_bulk_orders(self, orders):
-        """Amend multiple orders."""
+        '''Amend multiple orders.'''
         return self._curl_bitmex(api='order/bulk', postdict={'orders': orders}, verb='PUT', rethrow_errors=True)
 
     @authentication_required
     def create_bulk_orders(self, orders):
-        """Create multiple orders."""
+        '''Create multiple orders.'''
         for order in orders:
             order['clOrdID'] = self.orderIDPrefix + base64.b64encode(uuid.uuid4().bytes).decode('utf-8').rstrip('=\n')
             order['symbol'] = self.symbol
@@ -143,12 +143,12 @@ class BitMEXSymbolData(object):
 
     @authentication_required
     def open_orders(self):
-        """Get open orders."""
+        '''Get open orders.'''
         return self.ws.open_orders(self.orderIDPrefix)
 
     @authentication_required
     def http_open_orders(self):
-        """Get open orders via HTTP. Used on close to ensure we catch them all."""
+        '''Get open orders via HTTP. Used on close to ensure we catch them all.'''
         api = "order"
         orders = self._curl_bitmex(
             api=api,
@@ -160,7 +160,7 @@ class BitMEXSymbolData(object):
 
     @authentication_required
     def cancel(self, orderID):
-        """Cancel an existing order."""
+        '''Cancel an existing order.'''
         api = "order"
         postdict = {
             'orderID': orderID,
@@ -179,7 +179,7 @@ class BitMEXSymbolData(object):
         return self._curl_bitmex(api=api, postdict=postdict, verb="POST")
 
     def _curl_bitmex(self, api, query=None, postdict=None, timeout=3, verb=None, rethrow_errors=False):
-        """Send a request to BitMEX Servers."""
+        '''Send a request to BitMEX Servers.'''
         # Handle URL
         url = self.base_url + api
 

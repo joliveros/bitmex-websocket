@@ -64,7 +64,6 @@ class BitMEXWebsocket():
         self.logger.debug(url)
         return url
 
-
     def connect_websocket(self):
         '''Connect to the websocket in a thread.'''
 

@@ -10,15 +10,15 @@ with hooks():  # Python 2/3 compat
 
 class APIKeyAuth(AuthBase):
 
-    """Attaches API Key Authentication to the given Request object."""
+    '''Attaches API Key Authentication to the given Request object.'''
 
     def __init__(self, apiKey, apiSecret):
-        """Init with Key & Secret."""
+        '''Init with Key & Secret.'''
         self.apiKey = apiKey
         self.apiSecret = apiSecret
 
     def __call__(self, r):
-        """Called when forming a request - generates api key headers."""
+        '''Called when forming a request - generates api key headers.'''
         # modify and return the request
         nonce = generate_nonce()
         r.headers['api-nonce'] = str(nonce)
@@ -45,7 +45,7 @@ def generate_nonce():
 # data={"symbol":"XBTZ14","quantity":1,"price":395.01}
 # signature = HEX(HMAC_SHA256(secret, 'POST/api/v1/order1416993995705{"symbol":"XBTZ14","quantity":1,"price":395.01}'))
 def generate_signature(secret, verb, url, nonce, data):
-    """Generate a request signature compatible with BitMEX."""
+    '''Generate a request signature compatible with BitMEX.'''
     # Parse the url so we can remove the base and extract just the path.
     parsedURL = urlparse(url)
     path = parsedURL.path

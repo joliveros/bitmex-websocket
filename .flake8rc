@@ -1,0 +1,4 @@
+[flake8]
+# W191: Tabs instead of spaces
+# E302: Expected 2 blank lines, found 0
+ignore = W191,E302

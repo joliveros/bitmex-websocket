@@ -1,5 +1,9 @@
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals
+)
 from builtins import *
 from bitmex_websocket.websocket import BitMEXWebsocket
 from tests import *
@@ -28,14 +32,16 @@ def test_build_websocket_url_w_heartbeat(mocker):
 def test_build_websocket_url_without_heartbeat(mocker):
     socket = BitMEXWebsocket()
     socket.heartbeatEnabled = False
+
     url = socket.build_websocket_url('https://testnet.bitmex.com/api/v1/')
 
     assert url == 'wss://testnet.bitmex.com/realtime'
 
+
 def test_connect_websocket_with_heartbeat(mocker):
-    """
+    '''
     Ensure heartbeat is enabled on the websocket.
-    """
+    '''
     websocket_run_forever = mocker.patch(
         'bitmex_websocket.websocket.BitMEXWebsocket.websocket_run_forever')
     init_websocket = mocker.patch(
@@ -47,11 +53,13 @@ def test_connect_websocket_with_heartbeat(mocker):
 
     websocket_run_forever.assert_called_with(
         {'ping_timeout': 10, 'ping_interval': 25})
+    init_websocket.assert_called_once()
+
 
 def test_connect_websocket_without_heartbeat(mocker):
-    """
+    '''
     Ensure heartbeat is disabled on the websocket.
-    """
+    '''
     websocket_run_forever = mocker.patch(
         'bitmex_websocket.websocket.BitMEXWebsocket.websocket_run_forever')
     init_websocket = mocker.patch(
@@ -63,6 +71,8 @@ def test_connect_websocket_without_heartbeat(mocker):
 
     # neither ping_timeout or ping_interval are passed as args
     websocket_run_forever.assert_called_with({})
+    init_websocket.assert_called_once()
+
 
 def test_subscribe_to_channel(mocker):
 

@@ -1,5 +1,5 @@
 class dotdict(dict):
-    """dot.notation access to dictionary attributes"""
+    '''dot.notation access to dictionary attributes'''
     def __getattr__(self, attr):
         return self.get(attr)
     __setattr__ = dict.__setitem__
