@@ -5,13 +5,13 @@ bitmex-websocket
 [![Requires.io](https://requires.io/github/joliveros/bitmex-websocket/requirements.svg?branch=master)](https://requires.io/github/joliveros/bitmex-websocket/requirements?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/joliveros/bitmex-websocket/badge.svg?branch=master)](https://coveralls.io/github/joliveros/bitmex-websocket?branch=master)
 
-Bitmew Websocket API Wrapper
+Bitmex Websocket API Wrapper
 
 ## Requirements
 
-Package requirements are handled using pip. To install them do
+Package requirements are handled using pip. To install them do:
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
