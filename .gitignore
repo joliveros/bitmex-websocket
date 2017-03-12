@@ -39,3 +39,5 @@ htmlcov
 .pydevproject
 
 __pycache__
+.env
+.test-env

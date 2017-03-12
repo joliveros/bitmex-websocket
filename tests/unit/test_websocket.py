@@ -79,6 +79,7 @@ def test_connect_websocket_without_heartbeat(mocker):
     init_websocket.assert_called_once()
     wait_for_connection.assert_called_once()
 
+
 def test_subscribe_to_channel(mocker):
 
     send_message = mocker.patch(

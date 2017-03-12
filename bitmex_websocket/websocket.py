@@ -126,67 +126,6 @@ class BitMEXWebsocket():
         self.ws.send(json.dumps(message))
 
     #
-    # Data methods
-    #
-
-    def get_instrument(self, symbol):
-        instruments = self.data['instrument']
-        matchingInstruments = [i for i in instruments if i['symbol'] == symbol]
-        if len(matchingInstruments) == 0:
-            raise Exception("Unable to find instrument or index with symbol: " + symbol)
-        instrument = matchingInstruments[0]
-        # Turn the 'tickSize' into 'tickLog' for use in rounding
-        # http://stackoverflow.com/a/6190291/832202
-        instrument['tickLog'] = decimal.Decimal(str(instrument['tickSize'])).as_tuple().exponent * -1
-        return instrument
-
-    def get_ticker(self, symbol):
-        '''Return a ticker object. Generated from instrument.'''
-
-        instrument = self.get_instrument(symbol)
-
-        # If this is an index, we have to get the data from the last trade.
-        if instrument['symbol'][0] == '.':
-            ticker = {}
-            ticker['mid'] = ticker['buy'] = ticker['sell'] = ticker['last'] = instrument['markPrice']
-        # Normal instrument
-        else:
-            bid = instrument['bidPrice'] or instrument['lastPrice']
-            ask = instrument['askPrice'] or instrument['lastPrice']
-            ticker = {
-                "last": instrument['lastPrice'],
-                "buy": bid,
-                "sell": ask,
-                "mid": (bid + ask) / 2
-            }
-
-        # The instrument has a tickSize. Use it to round values.
-        return {k: round(float(v or 0), instrument['tickLog']) for k, v in iteritems(ticker)}
-
-    def funds(self):
-        return self.data['margin'][0]
-
-    def market_depth(self, symbol):
-        raise NotImplementedError('orderBook is not subscribed; use askPrice and bidPrice on instrument')
-        # return self.data['orderBook25'][0]
-
-    def open_orders(self, clOrdIDPrefix):
-        orders = self.data['order']
-        # Filter to only open orders (leavesQty > 0) and those that we actually placed
-        return [o for o in orders if str(o['clOrdID']).startswith(clOrdIDPrefix) and o['leavesQty'] > 0]
-
-    def position(self, symbol):
-        positions = self.data['position']
-        pos = [p for p in positions if p['symbol'] == symbol]
-        if len(pos) == 0:
-            # No position found; stub it
-            return {'avgCostPrice': 0, 'avgEntryPrice': 0, 'currentQty': 0, 'symbol': symbol}
-        return pos[0]
-
-    def recent_trades(self):
-        return self.data['trade']
-
-    #
     # Lifecycle methods
     #
     def error(self, err):
@@ -197,7 +136,6 @@ class BitMEXWebsocket():
     def exit(self):
         self.exited = True
         self.ws.close()
-
 
     #
     # Private methods
@@ -211,22 +149,18 @@ class BitMEXWebsocket():
         if self.shouldAuth is False:
             return []
 
-        if not settings.API_KEY:
-            self.logger.info("Authenticating with email/password.")
-            return [
-                "email: " + settings.LOGIN,
-                "password: " + settings.PASSWORD
-            ]
-        else:
-            self.logger.info("Authenticating with API Key.")
-            # To auth to the WS using an API key, we generate a signature of a nonce and
-            # the WS API endpoint.
-            nonce = generate_nonce()
-            return [
-                "api-nonce: " + str(nonce),
-                "api-signature: " + generate_signature(settings.API_SECRET, 'GET', '/realtime', nonce, ''),
-                "api-key:" + settings.API_KEY
-            ]
+        self.logger.info("Authenticating with API Key.")
+        # To auth to the WS using an API key, we generate a signature
+        # of a nonce and the WS API endpoint.
+        self.logger.debug(settings.BITMEX_API_KEY)
+        nonce = generate_nonce()
+        api_signature = generate_signature(
+            settings.BITMEX_API_SECRET, 'GET', '/realtime', nonce, '')
+        return [
+            "api-nonce: " + str(nonce),
+            "api-signature: " + api_signature,
+            "api-key:" + settings.BITMEX_API_KEY
+        ]
 
     def __wait_for_account(self):
         '''On subscribe, this data will come down. Wait for it.'''
@@ -348,19 +282,3 @@ def findItemByKeys(keys, table, matchData):
                 matched = False
         if matched:
             return item
-
-if __name__ == "__main__":
-    # create console handler and set level to debug
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    # create formatter
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    # add formatter to ch
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    ws = BitMEXWebsocket()
-    ws.logger = logger
-    ws.connect("https://testnet.bitmex.com/api/v1")
-    while(ws.ws.sock.connected):
-        sleep(1)

@@ -7,58 +7,100 @@ import base64
 import uuid
 import logging
 from bitmex_websocket.auth import AccessTokenAuth, APIKeyAuthWithExpires
-from bitmex_websocket.utils import constants, errors
+from bitmex_websocket.utils import constants, errors, log
 from bitmex_websocket.websocket import BitMEXWebsocket
 
 
-# https://www.bitmex.com/api/explorer/
-class BitMEXSymbolData(object):
+class SymbolData(object):
 
-    '''BitMEX API Connector.'''
+    '''
+    An in memory data store of instrument data with convenience accessors.
+    '''
 
-    def __init__(self, symbol=None, login=None, password=None, otpToken=None,
-                 apiKey=None, apiSecret=None, orderIDPrefix='mm_bitmex_', shouldWSAuth=True):
+    def __init__(
+            self,
+            symbol='XBTH17',
+            otpToken=None,
+            apiKey=None,
+            apiSecret=None,
+            orderIDPrefix='order',
+            shouldAuth=False):
         '''Init connector.'''
-        self.logger = logging.getLogger('root')
+        self.logger = log.setup_custom_logger(symbol)
         self.symbol = symbol
         self.token = None
-        # User/pass auth is no longer supported
-        if (login or password or otpToken):
-            raise Exception("User/password authentication is no longer supported via the API. Please use " +
-                            "an API key. You can generate one at https://www.bitmex.com/app/apiKeys")
         self.apiKey = apiKey
         self.apiSecret = apiSecret
+
         if len(orderIDPrefix) > 13:
-            raise ValueError("settings.ORDERID_PREFIX must be at most 13 characters long!")
+            raise ValueError(
+                'settings.ORDERID_PREFIX must be at most 13 characters long!')
+
         self.orderIDPrefix = orderIDPrefix
 
         # Prepare HTTPS session
         self.session = requests.Session()
         # These headers are always sent
-        self.session.headers.update({'user-agent': 'liquidbot-' + constants.VERSION})
-        self.session.headers.update({'content-type': 'application/json'})
-        self.session.headers.update({'accept': 'application/json'})
+        self.session.headers.update({
+            'user-agent': 'bitmex-websocket-' + constants.VERSION,
+            'content-type': 'application/json',
+            'accept': 'application/json'
+        })
 
-        # Create websocket for streaming data
-        self.ws = BitMEXWebsocket()
-        self.ws.connect(symbol, shouldAuth=shouldWSAuth)
+        self.connect_websocket(symbol=symbol)
 
     #
     # Public methods
     #
+    def connect_websocket(self):
+        # Create websocket for streaming data
+        self.ws = BitMEXWebsocket()
+        self.ws.connect(symbol=self.symbol, shouldAuth=self.shouldAuth)
+
     def ticker_data(self, symbol):
         '''Get ticker data.'''
-        return self.ws.get_ticker(symbol)
+        '''Return a ticker object. Generated from instrument.'''
+
+        instrument = self.instrument(symbol)
+
+        # If this is an index, we have to get the data from the last trade.
+        if instrument['symbol'][0] == '.':
+            ticker = {}
+            ticker['mid'] = ticker['buy'] = ticker['sell'] = ticker['last'] = instrument['markPrice']
+        # Normal instrument
+        else:
+            bid = instrument['bidPrice'] or instrument['lastPrice']
+            ask = instrument['askPrice'] or instrument['lastPrice']
+            ticker = {
+                "last": instrument['lastPrice'],
+                "buy": bid,
+                "sell": ask,
+                "mid": (bid + ask) / 2
+            }
+
+        # The instrument has a tickSize. Use it to round values.
+        return {k: round(float(v or 0), instrument['tickLog']) for k, v in iteritems(ticker)}
 
     def instrument(self, symbol):
         '''Get an instrument's details.'''
-        return self.ws.get_instrument(symbol)
+        instruments = self.data['instrument']
+        matchingInstruments = [i for i in instruments if i['symbol'] == symbol]
+        if len(matchingInstruments) == 0:
+            raise Exception("Unable to find instrument or index with symbol: " + symbol)
+        instrument = matchingInstruments[0]
+        # Turn the 'tickSize' into 'tickLog' for use in rounding
+        # http://stackoverflow.com/a/6190291/832202
+        instrument['tickLog'] = decimal.Decimal(str(instrument['tickSize'])).as_tuple().exponent * -1
+        return instrument
 
     def market_depth(self, symbol):
         '''Get market depth / orderbook.'''
-        return self.ws.market_depth(symbol)
+        raise NotImplementedError('orderBook is not subscribed; use askPrice and bidPrice on instrument')
+        # return self.data['orderBook25'][0]
 
-    def recent_trades(self, symbol):
+
+
+    def recent_trades(self):
         '''Get recent trades.
 
         Returns
@@ -70,7 +112,7 @@ class BitMEXSymbolData(object):
                u'tid': u'93842'},
 
         '''
-        return self.ws.recent_trades(symbol)
+        return self.data['trade']
 
     #
     # Authentication required methods
@@ -88,12 +130,17 @@ class BitMEXSymbolData(object):
     @authentication_required
     def funds(self):
         '''Get your current balance.'''
-        return self.ws.funds()
+        return self.data['margin'][0]
 
     @authentication_required
     def position(self, symbol):
         '''Get your open position.'''
-        return self.ws.position(symbol)
+        positions = self.data['position']
+        pos = [p for p in positions if p['symbol'] == symbol]
+        if len(pos) == 0:
+            # No position found; stub it
+            return {'avgCostPrice': 0, 'avgEntryPrice': 0, 'currentQty': 0, 'symbol': symbol}
+        return pos[0]
 
     @authentication_required
     def buy(self, quantity, price):
@@ -144,7 +191,11 @@ class BitMEXSymbolData(object):
     @authentication_required
     def open_orders(self):
         '''Get open orders.'''
-        return self.ws.open_orders(self.orderIDPrefix)
+        orders = self.data['order']
+        # Filter to only open orders (leavesQty > 0) and those that we actually placed
+        return [o for o in orders if str(o['clOrdID']).startswith(self.orderIDPrefix) and o['leavesQty'] > 0]
+
+
 
     @authentication_required
     def http_open_orders(self):
