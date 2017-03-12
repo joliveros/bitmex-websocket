@@ -64,28 +64,45 @@ class BitMEXWebsocket():
         self.logger.debug(url)
         return url
 
-    def connect_websocket(self):
-        wsURL = self.build_websocket_url()
-        '''Connect to the websocket in a thread.'''
-        self.logger.debug("Starting thread")
-        self.logger.debug("Connecting to %s" % (wsURL))
-        return
-        self.ws = websocket.WebSocketApp(wsURL,
-                                         on_message=self.__on_message,
-                                         on_close=self.__on_close,
-                                         on_open=self.__on_open,
-                                         on_error=self.__on_error,
-                                         # We can login using
-                                         #  email/pass or API key
-                                         header=self.__get_auth())
 
-        self.wst = threading.Thread(target=lambda: self.ws.run_forever())
+    def connect_websocket(self):
+        '''Connect to the websocket in a thread.'''
+
+        self.logger.debug("Starting thread")
+        self.init_websocket()
+
+        # setup websocket.run_forever arguments
+        wsRunArgs = {}
+        if self.heartbeatEnabled:
+            wsRunArgs['ping_timeout'] = 10
+            wsRunArgs['ping_interval'] = 25
+
+        self.logger.debug("websocket.run_forever: %s" % (wsRunArgs))
+
+        # Run the websocket on another thread and enable heartbeat
+        self.wst = threading.Thread(
+            target=lambda: self.websocket_run_forever(wsRunArgs)
+        )
         self.wst.daemon = True
         self.wst.start()
         self.logger.info("Started thread")
 
-        self.connect_websocketion_timeout()
 
+    def init_websocket(self):
+        wsURL = self.build_websocket_url()
+        self.logger.debug("Connecting to %s" % (wsURL))
+        self.ws = websocket.WebSocketApp(
+            wsURL,
+            on_message=self.__on_message,
+            on_close=self.__on_close,
+            on_open=self.__on_open,
+            on_error=self.__on_error,
+            # We can login using
+            #  email/pass or API key
+            header=self.__get_auth())
+
+    def websocket_run_forever(self, args):
+        self.ws.run_forever(**args)
 
     def subscribe(self, channel):
         channel = "{}:{}".format(channel, self.symbol)
@@ -174,19 +191,6 @@ class BitMEXWebsocket():
     #
     # Private methods
     #
-    def connect_websocketion_timeout(self):
-        # Wait for connect before continuing
-        conn_timeout = 4
-        while (not self.ws.sock or not self.ws.sock.connected) and conn_timeout and not self._error:
-            # self.logger.info('sleep..')
-            sleep(0)
-            conn_timeout -= 0
-
-        if not conn_timeout or self._error:
-            self.logger.error("Couldn't connect to WS! Exiting.")
-            self.exit()
-            sys.exit(0)
-
     def is_connected(self):
         self.ws.sock.connected
 
