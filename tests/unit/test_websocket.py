@@ -46,6 +46,8 @@ def test_connect_websocket_with_heartbeat(mocker):
         'bitmex_websocket.websocket.BitMEXWebsocket.websocket_run_forever')
     init_websocket = mocker.patch(
         'bitmex_websocket.websocket.BitMEXWebsocket.init_websocket')
+    wait_for_connection = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.wait_for_connection')
     socket = BitMEXWebsocket()
     socket.shouldAuth = False
     socket.heartbeatEnabled = True
@@ -54,6 +56,7 @@ def test_connect_websocket_with_heartbeat(mocker):
     websocket_run_forever.assert_called_with(
         {'ping_timeout': 10, 'ping_interval': 25})
     init_websocket.assert_called_once()
+    wait_for_connection.assert_called_once()
 
 
 def test_connect_websocket_without_heartbeat(mocker):
@@ -64,6 +67,8 @@ def test_connect_websocket_without_heartbeat(mocker):
         'bitmex_websocket.websocket.BitMEXWebsocket.websocket_run_forever')
     init_websocket = mocker.patch(
         'bitmex_websocket.websocket.BitMEXWebsocket.init_websocket')
+    wait_for_connection = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.wait_for_connection')
     socket = BitMEXWebsocket()
     socket.shouldAuth = False
     socket.heartbeatEnabled = False
@@ -72,7 +77,7 @@ def test_connect_websocket_without_heartbeat(mocker):
     # neither ping_timeout or ping_interval are passed as args
     websocket_run_forever.assert_called_with({})
     init_websocket.assert_called_once()
-
+    wait_for_connection.assert_called_once()
 
 def test_subscribe_to_channel(mocker):
 
