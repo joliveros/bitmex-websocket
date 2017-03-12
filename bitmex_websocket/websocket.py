@@ -104,7 +104,7 @@ class BitMEXWebsocket():
         self.logger.debug("Connecting to %s" % (wsURL))
         self.ws = websocket.WebSocketApp(
             wsURL,
-            on_message=self.__on_message,
+            on_message=self.on_message,
             on_close=self.__on_close,
             on_open=self.__on_open,
             on_error=self.__on_error,
@@ -177,84 +177,110 @@ class BitMEXWebsocket():
         '''Send a raw command.'''
         self.ws.send(json.dumps({"op": command, "args": args}))
 
-    def __on_message(self, ws, message):
+    def on_message(self, ws, message):
         '''Handler for parsing WS messages.'''
         message = json.loads(message)
-        self.logger.debug(json.dumps(message))
+        self.logger.debug(json.dumps(message, indent=4, sort_keys=True))
 
-        table = message['table'] if 'table' in message else None
         action = message['action'] if 'action' in message else None
+
         try:
             if 'subscribe' in message:
-                if message['success']:
-                    self.logger.debug("Subscribed to %s." % message['subscribe'])
-                else:
-                    self.error("Unable to subscribe to %s. Error: \"%s\" Please check and restart." %
-                               (message['request']['args'][0], message['error']))
+                self.on_subscribe(message)
             elif 'status' in message:
-                if message['status'] == 400:
-                    self.error(message['error'])
-                if message['status'] == 401:
-                    self.error("API Key incorrect, please check and restart.")
+                self.on_status(message)
             elif action:
-
-                if table not in self.data:
-                    self.data[table] = []
-
-                if table not in self.keys:
-                    self.keys[table] = []
-
-                # There are four possible actions from the WS:
-                # 'partial' - full table image
-                # 'insert'  - new row
-                # 'update'  - update row
-                # 'delete'  - delete row
-                if action == 'partial':
-                    self.logger.debug("%s: partial" % table)
-                    self.data[table] += message['data']
-                    # Keys are communicated on partials to let you know how to uniquely identify
-                    # an item. We use it for updates.
-                    self.keys[table] = message['keys']
-                elif action == 'insert':
-                    self.logger.debug('%s: inserting %s' % (table, message['data']))
-                    self.data[table] += message['data']
-
-                    # Limit the max length of the table to avoid excessive memory usage.
-                    # Don't trim orders because we'll lose valuable state if we do.
-                    if table != 'order' and len(self.data[table]) > BitMEXWebsocket.MAX_TABLE_LEN:
-                        self.data[table] = self.data[table][(BitMEXWebsocket.MAX_TABLE_LEN // 2):]
-
-                elif action == 'update':
-                    self.logger.debug('%s: updating %s' % (table, message['data']))
-                    # Locate the item in the collection and update it.
-                    for updateData in message['data']:
-                        item = findItemByKeys(self.keys[table], self.data[table], updateData)
-                        if not item:
-                            return  # No item found to update. Could happen before push
-
-                        # Log executions
-                        is_canceled = 'ordStatus' in updateData and updateData['ordStatus'] == 'Canceled'
-                        if table == 'order' and 'leavesQty' in updateData and not is_canceled:
-                            instrument = self.get_instrument(item['symbol'])
-                            contExecuted = abs(item['leavesQty'] - updateData['leavesQty'])
-                            self.logger.info("Execution: %s %d Contracts of %s at %.*f" %
-                                             (item['side'], contExecuted, item['symbol'],
-                                              instrument['tickLog'], item['price']))
-
-                        item.update(updateData)
-                        # Remove cancelled / filled orders
-                        if table == 'order' and item['leavesQty'] <= 0:
-                            self.data[table].remove(item)
-                elif action == 'delete':
-                    self.logger.debug('%s: deleting %s' % (table, message['data']))
-                    # Locate the item in the collection and remove it.
-                    for deleteData in message['data']:
-                        item = findItemByKeys(self.keys[table], self.data[table], deleteData)
-                        self.data[table].remove(item)
-                else:
-                    raise Exception("Unknown action: %s" % action)
+                self.on_action(action, message)
         except:
             self.logger.error(traceback.format_exc())
+
+    def on_subscribe(self, message):
+        if message['success']:
+            self.logger.debug("Subscribed to %s." % message['subscribe'])
+        else:
+            self.error("Unable to subscribe to %s. Error: \"%s\" Please\
+            check and restart." % (
+                message['request']['args'][0], message['error']))
+
+    def on_status(self, message):
+        if message['status'] == 400:
+            self.error(message['error'])
+        if message['status'] == 401:
+            self.error("API Key incorrect, please check and restart.")
+
+    def on_action(self, action, message):
+        table = message['table'] if 'table' in message else None
+
+        if table not in self.data:
+            self.data[table] = []
+
+        if table not in self.keys:
+            self.keys[table] = []
+
+        # There are four possible actions from the WS:
+        # 'partial' - full table image
+        # 'insert'  - new row
+        # 'update'  - update row
+        # 'delete'  - delete row
+        if action == 'partial':
+            self.logger.debug("%s: partial" % table)
+            # Keys are communicated on partials to let you know how to uniquely
+            # identify an item. We use it for updates.
+            self.keys[table] = message['keys']
+            if table == 'orderBookL2':
+                return self.update_orderBookL2(action, message['data'])
+
+            self.data[table] += message['data']
+        elif action == 'insert':
+            self.logger.debug('%s: inserting %s' % (table, message['data']))
+            if table == 'orderBookL2':
+                return self.update_orderBookL2(action, message['data'])
+
+            self.data[table] += message['data']
+
+            # Limit the max length of the table to avoid excessive memory
+            # usage. Don't trim orders because we'll lose valuable state if
+            # we do.
+            max_len = BitMEXWebsocket.MAX_TABLE_LEN
+            if table != 'order' and len(self.data[table]) > max_len:
+                self.data[table] = self.data[table][(max_len // 2):]
+
+        elif action == 'update':
+            self.logger.debug('%s: updating %s' % (table, message['data']))
+            # Locate the item in the collection and update it.
+            for updateData in message['data']:
+                item = findItemByKeys(self.keys[table], self.data[table], updateData)
+                if not item:
+                    return  # No item found to update. Could happen before push
+
+                # Log executions
+                is_canceled = 'ordStatus' in updateData and updateData['ordStatus'] == 'Canceled'
+                if table == 'order' and 'leavesQty' in updateData and not is_canceled:
+                    instrument = self.get_instrument(item['symbol'])
+                    contExecuted = abs(item['leavesQty'] - updateData['leavesQty'])
+                    self.logger.info("Execution: %s %d Contracts of %s at %.*f" %
+                                     (item['side'], contExecuted, item['symbol'],
+                                      instrument['tickLog'], item['price']))
+
+                item.update(updateData)
+                # Remove cancelled / filled orders
+                if table == 'order' and item['leavesQty'] <= 0:
+                    self.data[table].remove(item)
+        elif action == 'delete':
+            self.logger.debug('%s: deleting %s' % (table, message['data']))
+            # Locate the item in the collection and remove it.
+            for deleteData in message['data']:
+                item = findItemByKeys(self.keys[table], self.data[table], deleteData)
+                self.data[table].remove(item)
+        else:
+            raise Exception("Unknown action: %s" % action)
+
+    def update_orderBookL2(self, method, data):
+        if method == 'partial':
+            self.data['orderBookL2'] = data
+        print(json.dumps(data))
+        # elif method == 'insert':
+            #insert some data
 
     def __on_open(self, ws):
         self.logger.debug("Websocket Opened.")
