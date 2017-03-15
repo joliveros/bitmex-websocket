@@ -1,96 +1,96 @@
 {
-    "action": "partial",
-    "attributes": {
-        "id": "sorted",
-        "symbol": "grouped"
-    },
-    "data": [
-        {
-            "id": 22999874060,
-            "price": 1259.4,
-            "side": "Sell",
-            "size": 125940,
-            "symbol": "XBTH17"
-        },
-        {
-            "id": 22999874619,
-            "price": 1253.81,
-            "side": "Sell",
-            "size": 62691,
-            "symbol": "XBTH17"
-        },
-        {
-            "id": 22999875626,
-            "price": 1243.74,
-            "side": "Sell",
-            "size": 24875,
-            "symbol": "XBTH17"
-        },
-        {
-            "id": 22999875644,
-            "price": 1243.56,
-            "side": "Sell",
-            "size": 12436,
-            "symbol": "XBTH17"
-        },
-        {
-            "id": 22999875831,
-            "price": 1241.69,
-            "side": "Buy",
-            "size": 12380,
-            "symbol": "XBTH17"
-        },
-        {
-            "id": 22999875849,
-            "price": 1241.51,
-            "side": "Buy",
-            "size": 24759,
-            "symbol": "XBTH17"
-        },
-        {
-            "id": 22999876856,
-            "price": 1231.44,
-            "side": "Buy",
-            "size": 61898,
-            "symbol": "XBTH17"
-        },
-        {
-            "id": 22999877415,
-            "price": 1225.85,
-            "side": "Buy",
-            "size": 123795,
-            "symbol": "XBTH17"
-        },
-        {
-            "id": 22999881111,
-            "price": 1188.89,
-            "side": "Buy",
-            "size": 600,
-            "symbol": "XBTH17"
-        },
-        {
-            "id": 22999883000,
-            "price": 1170,
-            "side": "Buy",
-            "size": 30000,
-            "symbol": "XBTH17"
-        }
-    ],
-    "foreignKeys": {
-        "side": "side",
-        "symbol": "instrument"
-    },
-    "keys": [
-        "symbol",
-        "id",
-        "side"
-    ],
-    "table": "orderBookL2",
-    "types": {
-        "id": "long",
-        "price": "float",
-        "side": "symbol",
-        "size": "long",
-        "symbol": "symbol"
-    }
+   "action": "partial",
+   "attributes": {
+       "id": "sorted",
+       "symbol": "grouped"
+   },
+   "data": [
+       {
+           "id": 22999872462,
+           "price": 1275.38,
+           "side": "Sell",
+           "size": 127539,
+           "symbol": "XBTH17"
+       },
+       {
+           "id": 22999873028,
+           "price": 1269.72,
+           "side": "Sell",
+           "size": 63486,
+           "symbol": "XBTH17"
+       },
+       {
+           "id": 22999874048,
+           "price": 1259.52,
+           "side": "Sell",
+           "size": 25191,
+           "symbol": "XBTH17"
+       },
+       {
+           "id": 22999874066,
+           "price": 1259.34,
+           "side": "Sell",
+           "size": 12594,
+           "symbol": "XBTH17"
+       },
+       {
+           "id": 22999874255,
+           "price": 1257.45,
+           "side": "Buy",
+           "size": 12604,
+           "symbol": "XBTH17"
+       },
+       {
+           "id": 22999874274,
+           "price": 1257.26,
+           "side": "Buy",
+           "size": 25207,
+           "symbol": "XBTH17"
+       },
+       {
+           "id": 22999875293,
+           "price": 1247.07,
+           "side": "Buy",
+           "size": 63017,
+           "symbol": "XBTH17"
+       },
+       {
+           "id": 22999875860,
+           "price": 1241.4,
+           "side": "Buy",
+           "size": 126034,
+           "symbol": "XBTH17"
+       },
+       {
+           "id": 22999881111,
+           "price": 1188.89,
+           "side": "Buy",
+           "size": 1200,
+           "symbol": "XBTH17"
+       },
+       {
+           "id": 22999883000,
+           "price": 1170,
+           "side": "Buy",
+           "size": 30000,
+           "symbol": "XBTH17"
+       }
+   ],
+   "foreignKeys": {
+       "side": "side",
+       "symbol": "instrument"
+   },
+   "keys": [
+       "symbol",
+       "id",
+       "side"
+   ],
+   "table": "orderBookL2",
+   "types": {
+       "id": "long",
+       "price": "float",
+       "side": "symbol",
+       "size": "long",
+       "symbol": "symbol"
+   }
 }
