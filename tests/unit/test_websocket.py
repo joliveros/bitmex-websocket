@@ -18,7 +18,7 @@ with open('./tests/fixtures/order_book_l2_partial_action_message.json')\
     orderBookL2_data['partial'] = json.load(partial_data)
 with open('./tests/fixtures/order_book_insert_action_message.json')\
         as insert_data:
-    orderBookL2_data['insert'] = json.load(insert_data) 
+    orderBookL2_data['insert'] = json.load(insert_data)
 
 
 def test_connect_should_connect_ws(mocker):
@@ -182,16 +182,14 @@ def test_on_partial_orderBookL2_action_data(mocker):
 
 
 def test_on_insert_orderBookL2_action_data(mocker):
-    update_orderBookL2 = mocker.patch(
-        'bitmex_websocket.websocket.BitMEXWebsocket.update_orderBookL2')
     socket = BitMEXWebsocket()
 
-    message = orderBookL2_data['insert']
+    partial_action_message = orderBookL2_data['partial']
+    insert_action_message = orderBookL2_data['insert']
 
-    action = message['action']
-    socket.on_action(action, message)
+    socket.on_action('partial', partial_action_message)
+    socket.on_action('insert', insert_action_message)
 
-    update_orderBookL2.assert_called_once()
 
 
 @pytest.mark.xfail

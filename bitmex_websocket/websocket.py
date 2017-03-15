@@ -65,7 +65,7 @@ class BitMEXWebsocket():
         return url
 
     def connect_websocket(self):
-        '''Connect to the websocket in a thread.'''
+        """Connect to the websocket in a thread."""
 
         self.logger.debug("Starting thread")
         self.init_websocket()
@@ -232,7 +232,7 @@ class BitMEXWebsocket():
 
             self.data[table] += message['data']
         elif action == 'insert':
-            self.logger.debug('%s: inserting %s' % (table, message['data']))
+            self.logger.debug('%s: inserting' % (table))
             if table == 'orderBookL2':
                 return self.update_orderBookL2(action, message['data'])
 
@@ -246,7 +246,7 @@ class BitMEXWebsocket():
                 self.data[table] = self.data[table][(max_len // 2):]
 
         elif action == 'update':
-            self.logger.debug('%s: updating %s' % (table, message['data']))
+            self.logger.debug('%s: updating' % (table))
             # Locate the item in the collection and update it.
             for updateData in message['data']:
                 item = findItemByKeys(self.keys[table], self.data[table], updateData)
@@ -276,9 +276,13 @@ class BitMEXWebsocket():
             raise Exception("Unknown action: %s" % action)
 
     def update_orderBookL2(self, method, data):
+        for delta in data:
+            delta.pop('symbol', None)
+            delta.pop('id', None)
+
+        print(json.dumps(data))
         if method == 'partial':
             self.data['orderBookL2'] = data
-        print(json.dumps(data))
         # elif method == 'insert':
             #insert some data
 
