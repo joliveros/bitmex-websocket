@@ -1,0 +1,47 @@
+{
+    "action": "delete",
+    "data": [
+        {
+            "id": 22999872462,
+            "side": "Sell",
+            "symbol": "XBTH17"
+        },
+        {
+            "id": 22999873028,
+            "side": "Sell",
+            "symbol": "XBTH17"
+        },
+        {
+            "id": 22999874048,
+            "side": "Sell",
+            "symbol": "XBTH17"
+        },
+        {
+            "id": 22999874066,
+            "side": "Sell",
+            "symbol": "XBTH17"
+        },
+        {
+            "id": 22999874255,
+            "side": "Buy",
+            "symbol": "XBTH17"
+        },
+        {
+            "id": 22999874274,
+            "side": "Buy",
+            "symbol": "XBTH17"
+        },
+        {
+            "id": 22999875293,
+            "side": "Buy",
+            "symbol": "XBTH17"
+        },
+        {
+            "id": 22999875860,
+            "side": "Buy",
+            "symbol": "XBTH17"
+        }
+    ],
+    "table": "orderBookL2"
+}
+

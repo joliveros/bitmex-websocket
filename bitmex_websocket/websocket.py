@@ -268,6 +268,8 @@ class BitMEXWebsocket():
                     self.data[table].remove(item)
         elif action == 'delete':
             self.logger.debug('%s: deleting %s' % (table, message['data']))
+            if table == 'orderBookL2':
+                return self.update_orderBookL2(action, message['data'])
             # Locate the item in the collection and remove it.
             for deleteData in message['data']:
                 item = findItemByKeys(self.keys[table], self.data[table], deleteData)
@@ -276,13 +278,19 @@ class BitMEXWebsocket():
             raise Exception("Unknown action: %s" % action)
 
     def update_orderBookL2(self, method, data):
-        for delta in data:
-            delta.pop('symbol', None)
-            delta.pop('id', None)
-
-        print(json.dumps(data))
+        self.logger.debug(json.dumps(data))
         if method == 'partial':
             self.data['orderBookL2'] = data
+        elif method == 'delete':
+            for delete_level in data:
+                level_to_delete = next(level for level in \
+                    self.data['orderBookL2'] if level['id'] == delete_level['id'])
+                print("_delete level: %s" % (delete_level))
+                if level_to_delete:
+                    self.data['orderBookL2'].remove(level_to_delete)
+        elif method == 'insert':
+            for level in data:
+                self.data['orderBookL2'].append(level)
         # elif method == 'insert':
             #insert some data
 

@@ -16,10 +16,12 @@ orderBookL2_data = {}
 with open('./tests/fixtures/order_book_l2_partial_action_message.json')\
         as partial_data:
     orderBookL2_data['partial'] = json.load(partial_data)
-with open('./tests/fixtures/order_book_insert_action_message.json')\
+with open('./tests/fixtures/order_book_l2_insert_action_message.json')\
         as insert_data:
     orderBookL2_data['insert'] = json.load(insert_data)
-
+with open('./tests/fixtures/order_book_l2_delete_action_message.json')\
+        as delete_data:
+    orderBookL2_data['delete'] = json.load(delete_data)
 
 def test_connect_should_connect_ws(mocker):
     connect_websocket = mocker.patch(
@@ -182,14 +184,34 @@ def test_on_partial_orderBookL2_action_data(mocker):
 
 
 def test_on_insert_orderBookL2_action_data(mocker):
+    """
+    Ensure orderBookL2 is updated on delete and insert actions.
+    """
     socket = BitMEXWebsocket()
 
     partial_action_message = orderBookL2_data['partial']
     insert_action_message = orderBookL2_data['insert']
+    delete_action_message = orderBookL2_data['delete']
 
     socket.on_action('partial', partial_action_message)
-    socket.on_action('insert', insert_action_message)
+    delete_level_id = delete_action_message['data'][0]['id']
 
+    partial_data = partial_action_message['data']
+    existing_level = next(level for level in partial_data if level['id'] == delete_level_id)
+    assert existing_level['id'] == delete_level_id
+
+    socket.data['orderBookL2']
+    socket.on_action('delete', delete_action_message)
+    delete_level = next((level for level in partial_data if level['id'] == delete_level_id), None)
+    assert not delete_level
+
+    socket.on_action('insert', insert_action_message)
+    insert_data = insert_action_message['data']
+    orderBookL2 = socket.data['orderBookL2']
+
+    for insert_level in insert_data:
+        level = next(level for level in orderBookL2 if level['id'] == insert_level['id'])
+        assert level['id'] == insert_level['id']
 
 
 @pytest.mark.xfail
