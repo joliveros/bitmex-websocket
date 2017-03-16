@@ -41,3 +41,4 @@ htmlcov
 __pycache__
 .env
 .test-env
+.idea

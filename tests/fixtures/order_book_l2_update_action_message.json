@@ -1,0 +1,12 @@
+{
+    "action": "update",
+    "data": [
+        {
+            "id": 22999874079,
+            "side": "Sell",
+            "size": 10257,
+            "symbol": "XBTH17"
+        }
+    ],
+    "table": "orderBookL2"
+}

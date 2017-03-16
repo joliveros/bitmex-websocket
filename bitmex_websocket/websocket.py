@@ -46,12 +46,6 @@ class BitMEXWebsocket():
         self.logger.info('Connected to WS. Waiting for data images, this may \
         take a moment...')
 
-        # Connected. Wait for partials
-        # self.__wait_for_symbol(symbol)
-        # if self.shouldAuth:
-        #     self.__wait_for_account()
-        # self.logger.info('Got all market data. Starting.')
-
     def build_websocket_url(self, base_url=settings.BASE_URL):
         self.logger.debug('Build websocket url from: %s' % (base_url))
 
@@ -248,6 +242,9 @@ class BitMEXWebsocket():
 
         elif action == 'update':
             self.logger.debug('%s: updating' % (table))
+            if table == 'orderBookL2':
+                return self.update_orderBookL2(action, message['data'])
+
             # Locate the item in the collection and update it.
             for updateData in message['data']:
                 item = findItemByKeys(self.keys[table], self.data[table], updateData)
@@ -283,17 +280,19 @@ class BitMEXWebsocket():
         if method == 'partial':
             self.data['orderBookL2'] = data
         elif method == 'delete':
-            for delete_level in data:
-                level_to_delete = next(level for level in \
-                    self.data['orderBookL2'] if level['id'] == delete_level['id'])
-                print("_delete level: %s" % (delete_level))
-                if level_to_delete:
-                    self.data['orderBookL2'].remove(level_to_delete)
+            for delete in data:
+                level = next(level for level in
+                    self.data['orderBookL2'] if level['id'] == delete['id'])
+                if level:
+                    self.data['orderBookL2'].remove(level)
         elif method == 'insert':
             for level in data:
                 self.data['orderBookL2'].append(level)
-        # elif method == 'insert':
-            #insert some data
+        elif method == 'update':
+            for update in data:
+                level = next(level for level in self.data['orderBookL2']
+                                       if level['id'] == update['id'])
+                level['size'] = update['size']
 
     def __on_open(self, ws):
         self.logger.debug("Websocket Opened.")
