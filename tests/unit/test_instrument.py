@@ -155,3 +155,26 @@ def test_getTable(mocker):
     instrument.on_partial(partial_action_message)
     orderBookL2 = instrument.getTable('orderBookL2')
     assert orderBookL2 == partial_action_message['data']
+
+
+def test_emit_event_on_partial_table_action(mocker):
+    """
+    Ensure table change and action events are called on partial action.
+    """
+    connect_mock = mocker.patch(
+    'bitmex_websocket.websocket.BitMEXWebsocket.connect')
+    subscribe_to_channels_mock = mocker.patch(
+        'bitmex_websocket.Instrument.subscribe_to_channels')
+    subscribe_to_secure_channels_mock = mocker.patch(
+        'bitmex_websocket.Instrument.subscribe_to_secure_channels')
+    instrument = Instrument()
+    orderBookL2_change = mocker.stub()
+    instrument.on('orderBookL2', orderBookL2_change)
+    # Recieve partial action message
+    partial_action_message = orderBookL2_data['partial']
+    partial_data = partial_action_message['data']
+    instrument.on_partial(partial_action_message)
+    orderBookL2 = instrument.getTable('orderBookL2')
+    assert orderBookL2 == partial_action_message['data']
+    # Ensure orderBookL2 event was emitted
+    orderBookL2_change.assert_called_once_with(orderBookL2)

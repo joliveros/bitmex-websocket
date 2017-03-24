@@ -10,6 +10,7 @@ import decimal
 from bitmex_websocket.settings import settings
 from bitmex_websocket.utils.log import setup_custom_logger
 from bitmex_websocket.websocket import BitMEXWebsocket
+from pyee import EventEmitter
 
 # Don't grow a table larger than this amount. Helps cap memory usage.
 MAX_TABLE_LEN = 200
@@ -44,7 +45,7 @@ SECURE_CHANNELS = [
 ACTIONS = ('partial', 'insert', 'update', 'delete')
 
 
-class Instrument():
+class Instrument(EventEmitter):
     def __init__(self,
                  symbol='XBTH17',
                  channels=None,
@@ -52,6 +53,8 @@ class Instrument():
                  shouldAuth=False,
                  websocket=None):
 
+        EventEmitter.__init__(self)
+        self.symbol = symbol
         self.shouldAuth = shouldAuth
         self.data = {
             'orderBookL2': [],
@@ -118,6 +121,13 @@ class Instrument():
         self.logger.debug("%s: partial" % table)
         getattr(self, "update_%s" % (table))('partial', data)
 
+    def on_action(self, table, handler):
+        for action in ACTIONS:
+            self.websocket.subscribe(action,
+                                     table,
+                                     self.symbol,
+                                     handler)
+
     def on_insert(self, message):
         table = message['table']
         action = message['action']
@@ -177,6 +187,7 @@ class Instrument():
         self.logger.debug(json.dumps(data))
         if method == 'partial':
             self.data['orderBookL2'] = data
+            self.emit('orderBookL2', self.data['orderBookL2'])
         elif method == 'delete':
             for delete in data:
                 level = next(level for level in self.data['orderBookL2']
@@ -188,12 +199,15 @@ class Instrument():
             for level in data:
                 self.logger.debug("insert level %s" % (json.dumps(level)))
                 self.data['orderBookL2'].append(level)
+            self.emit('orderBookL2', self.data['orderBookL2'])
         elif method == 'update':
             for update in data:
                 level = next(level for level in self.data['orderBookL2']
                              if level['id'] == update['id'])
                 self.logger.debug("update level %s" % (json.dumps(level)))
                 level['size'] = update['size']
+            self.emit('orderBookL2', self.data['orderBookL2'])
+
 
     def update_instrument(self, action, data):
         self.logger.debug(data)
