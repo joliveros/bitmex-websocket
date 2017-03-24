@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 from bitmex_websocket.websocket import BitMEXWebsocket
-from time import sleep
 import logging
 import websocket
+import asyncio
 
 _logger = logging.getLogger('websocket')
 _logger.setLevel(logging.DEBUG)
@@ -12,5 +12,5 @@ ws = BitMEXWebsocket()
 ws.connect()
 ws.subscribe('instrument_')
 
-while True:
-    sleep(1)
+loop = asyncio.get_event_loop()
+loop.run_forever()
