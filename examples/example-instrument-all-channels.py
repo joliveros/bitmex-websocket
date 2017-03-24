@@ -8,7 +8,7 @@ _logger = logging.getLogger('websocket')
 _logger.setLevel(logging.DEBUG)
 websocket.enableTrace(True)
 
-XBTH17 = Instrument(symbol='XBTUSD', channels=('instrument'))
+XBTH17 = Instrument(symbol='XBTH17', channels=['instrument'])
 
 while True:
     sleep(1)

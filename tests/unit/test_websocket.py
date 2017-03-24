@@ -54,6 +54,14 @@ def test_build_websocket_url_without_heartbeat(mocker):
     assert url == 'wss://testnet.bitmex.com/realtime'
 
 
+def test_on_message_receive_ping(mocker):
+    socket = BitMEXWebsocket()
+    ping_handler = mocker.stub()
+    socket.on('ping', ping_handler)
+    socket.on_message({}, 'primus::ping::1490325390545')
+    ping_handler.assert_called_once_with('primus::ping::1490325390545')
+
+
 def test_connect_websocket_with_heartbeat(mocker):
     '''
     Ensure heartbeat is enabled on the websocket.

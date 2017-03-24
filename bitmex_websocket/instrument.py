@@ -54,6 +54,7 @@ class Instrument(EventEmitter):
                  websocket=None):
 
         EventEmitter.__init__(self)
+        self.logger = setup_custom_logger("Instrument:%s" % (symbol))
         self.symbol = symbol
         self.shouldAuth = shouldAuth
         self.data = {
@@ -73,7 +74,6 @@ class Instrument(EventEmitter):
         self.secureChannels = []
         if shouldAuth:
             self.subscribe_to_secure_channels(symbol, secureChannels)
-        self.logger = setup_custom_logger("instrument:%s" % (symbol))
 
     def subscribe_to_channels(self, symbol, channels):
         # Subscribe to all channels by default
@@ -95,8 +95,10 @@ class Instrument(EventEmitter):
         for channel in _channels:
             self.subscribe_actions_for_channel(symbol, channel)
 
-    def subscribe_actions_for_channel(self, channel, symbol):
+    def subscribe_actions_for_channel(self, symbol, channel):
         for action in ACTIONS:
+            self.logger.debug(action)
+            self.logger.debug(channel)
             self.websocket.subscribe(action,
                                      channel,
                                      symbol,
@@ -151,25 +153,7 @@ class Instrument(EventEmitter):
         if table == 'orderBookL2':
             return self.update_orderBookL2(action, message['data'])
 
-        # Locate the item in the collection and update it.
-        for updateData in message['data']:
-            item = findItemByKeys(self.keys[table], self.data[table], updateData)
-            if not item:
-                return  # No item found to update. Could happen before push
-
-            # Log executions
-            is_canceled = 'ordStatus' in updateData and updateData['ordStatus'] == 'Canceled'
-            if table == 'order' and 'leavesQty' in updateData and not is_canceled:
-                instrument = self.get_instrument(item['symbol'])
-                contExecuted = abs(item['leavesQty'] - updateData['leavesQty'])
-                self.logger.info("Execution: %s %d Contracts of %s at %.*f" %
-                                 (item['side'], contExecuted, item['symbol'],
-                                  instrument['tickLog'], item['price']))
-
-            item.update(updateData)
-            # Remove cancelled / filled orders
-            if table == 'order' and item['leavesQty'] <= 0:
-                self.data[table].remove(item)
+        self.logger.debug(message)
 
     def on_delete(self, message):
         table = message['table']

@@ -13,18 +13,20 @@ from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
 from urllib.parse import urlparse
 from pyee import EventEmitter
 
+PING_MESSAGE_PREFIX = 'primus::ping::'
 
 class BitMEXWebsocket(EventEmitter):
     def __init__(self):
         EventEmitter.__init__(self)
         self.logger = setup_custom_logger('BitMEXWebsocket')
+        self.channels = []
         self.__reset()
 
     def connect(
             self,
             shouldAuth=False,
             websocket=None,
-            heartbeatEnabled=True):
+            heartbeatEnabled=False):
         '''Connect to the websocket and initialize data stores.'''
 
         self.logger.debug("Connecting WebSocket.")
@@ -107,8 +109,12 @@ class BitMEXWebsocket(EventEmitter):
                                                      channel)
         self.logger.debug("Subscribe to %s" % (action_event_key))
         self.on(action_event_key, action_handler)
-        self.logger.info(subscriptionMsg)
-        self.send_message(subscriptionMsg)
+
+        if channelKey not in self.channels:
+            self.channels.append(channelKey)
+            self.logger.debug(self.channels)
+            self.logger.info(subscriptionMsg)
+            self.send_message(subscriptionMsg)
 
     def send_message(self, message):
         self.ws.send(json.dumps(message))
@@ -128,6 +134,8 @@ class BitMEXWebsocket(EventEmitter):
     def on_subscribe(self, message):
         if message['success']:
             self.logger.debug("Subscribed to %s." % message['subscribe'])
+            if message['subscribe'] not in self.channels:
+                self.channels.append(message['subscribe'])
         else:
             self.error("Unable to subscribe to %s. Error: \"%s\" Please\
             check and restart." % (
@@ -135,8 +143,13 @@ class BitMEXWebsocket(EventEmitter):
 
     def on_message(self, ws, message):
         '''Handler for parsing WS messages.'''
+        # Check if ping message
+        ping_message = message[:14]
+        if ping_message == PING_MESSAGE_PREFIX:
+            return self.emit('ping', message)
+
+        self.logger.debug(json.dumps(message, indent=4, sort_keys=True))
         message = json.loads(message)
-        # self.logger.debug(json.dumps(message, indent=4, sort_keys=True))
 
         action = message['action'] if 'action' in message else None
 
