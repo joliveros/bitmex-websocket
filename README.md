@@ -28,6 +28,10 @@ XBTH17 = Instrument(symbol='XBTH17',
                     channels=['margin'],
                     shouldAuth=True)
 
+# Get the latest orderbook
+orderBook10 = XBTH17.get_table('orderBook10')
+
+# subscribe to all action events for this instrument
 XBTH17.on('action', lambda x: print("# action message: %s" % x))
 
 loop = asyncio.get_event_loop()
