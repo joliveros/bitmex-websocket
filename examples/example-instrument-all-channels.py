@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from bitmex_websocket.instrument import Instrument
+from bitmex_websocket import Instrument
 import asyncio
 import websocket
 

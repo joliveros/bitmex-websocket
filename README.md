@@ -17,26 +17,39 @@ pip install bitmex-websocket
 
 ## Usage
 
-```python
-from bitmex_websocket.instrument import Instrument
-import asyncio
-import websocket
+1. First you should set your `BITMEX_API_KEY` and `BITMEX_API_SECRET`. It can
+   be done as follows:
+   ```bash
+   $ cp .env.example .env
+   #  edit .env to reflect your API key and secret
+   $ source .env
+   ```
 
-websocket.enableTrace(True)
+1. Then in your project you can consume `Instrument` as follows:
+    ```python
+    from bitmex_websocket import Instrument
+    import asyncio
+    import websocket
 
-XBTH17 = Instrument(symbol='XBTH17',
-                    channels=['margin'],
-                    shouldAuth=True)
+    websocket.enableTrace(True)
 
-# Get the latest orderbook
-orderBook10 = XBTH17.get_table('orderBook10')
+    XBTH17 = Instrument(symbol='XBTH17',
+                        # subscribes to all channels by default, here we
+                        # limit to just these two
+                        channels=['margin', 'orderBook10'],
+                        # you must set your environment variables to authenticate
+                        # see .env.example
+                        shouldAuth=True)
 
-# subscribe to all action events for this instrument
-XBTH17.on('action', lambda x: print("# action message: %s" % x))
+    # Get the latest orderbook
+    orderBook10 = XBTH17.get_table('orderBook10')
 
-loop = asyncio.get_event_loop()
-loop.run_forever()
-```
+    # subscribe to all action events for this instrument
+    XBTH17.on('action', lambda x: print("# action message: %s" % x))
+
+    loop = asyncio.get_event_loop()
+    loop.run_forever()
+    ```
 
 ## Examples
   Run example scripts:
