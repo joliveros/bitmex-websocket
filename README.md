@@ -7,14 +7,38 @@ bitmex-websocket
 
 Bitmex Websocket API Wrapper
 
-## Requirements
-
-Package requirements are handled using pip. To install them do:
+## Install
 
 ```bash
-pip install -r requirements.txt
+pip install bitmex-websocket
 ```
 
+
+
+## Usage
+
+```python
+from bitmex_websocket.instrument import Instrument
+import asyncio
+import websocket
+
+websocket.enableTrace(True)
+
+XBTH17 = Instrument(symbol='XBTH17',
+                    channels=['margin'],
+                    shouldAuth=True)
+
+XBTH17.on('action', lambda x: print("# action message: %s" % x))
+
+loop = asyncio.get_event_loop()
+loop.run_forever()
+```
+
+## Examples
+  Run example scripts:
+  ```bash
+  RUN_ENV=test python -m examples.example-1
+  ```
 ## Tests
 
 Testing is set up using [pytest](http://pytest.org) and coverage is handled
@@ -24,9 +48,3 @@ Run your tests with ```py.test``` in the root directory.
 
 Coverage is ran by default and is set in the ```pytest.ini``` file.
 To see an html output of coverage open ```htmlcov/index.html``` after running the tests.
-
-## Examples
-  Run example scripts:
-  ```bash
-  RUN_ENV=test python -m examples.example-1
-  ```

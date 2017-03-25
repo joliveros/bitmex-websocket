@@ -6,25 +6,12 @@ from __future__ import (
 )
 from builtins import *
 from bitmex_websocket.websocket import BitMEXWebsocket
-from tests import *
-from tests.helpers import *
+from tests.helpers import message_fixtures
 import pytest
+import time
 import json
 
-
-orderBookL2_data = {}
-with open('./tests/fixtures/order_book_l2_partial_action_message.json')\
-        as partial_data:
-    orderBookL2_data['partial'] = json.load(partial_data)
-with open('./tests/fixtures/order_book_l2_insert_action_message.json')\
-        as insert_data:
-    orderBookL2_data['insert'] = json.load(insert_data)
-with open('./tests/fixtures/order_book_l2_delete_action_message.json')\
-        as delete_data:
-    orderBookL2_data['delete'] = json.load(delete_data)
-with open('./tests/fixtures/order_book_l2_update_action_message.json')\
-        as update_data:
-    orderBookL2_data['update'] = json.load(update_data)
+orderBookL2_data = message_fixtures()['orderBookL2']
 
 
 def test_connect_should_connect_ws(mocker):
@@ -38,6 +25,8 @@ def test_connect_should_connect_ws(mocker):
 
 
 def test_build_websocket_url_w_heartbeat(mocker):
+    connect_websocket = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.connect_websocket')
     socket = BitMEXWebsocket()
     socket.heartbeatEnabled = True
     url = socket.build_websocket_url('https://testnet.bitmex.com/api/v1/')
@@ -46,12 +35,54 @@ def test_build_websocket_url_w_heartbeat(mocker):
 
 
 def test_build_websocket_url_without_heartbeat(mocker):
+    connect_websocket = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.connect_websocket')
     socket = BitMEXWebsocket()
     socket.heartbeatEnabled = False
 
     url = socket.build_websocket_url('https://testnet.bitmex.com/api/v1/')
 
     assert url == 'wss://testnet.bitmex.com/realtime'
+
+
+def test_on_message_receive_ping(mocker):
+    """
+    Bitmex websocket uses Primus websocket lib which uses the
+    following heartbeat scheme:
+
+          client will disconnect
+            if not recv within
+              `pingTimeout`
+
+         primus::pong::{timestamp}
+        +----------------------+
+        |                      |
+    +---v----+            +---------+
+    | server |            |  client |
+    +--------+            +----^----+
+        |                      |
+        +----------------------+
+         primus::ping::{timestamp}
+
+          sent at `pingInterval`
+          server will disconnect
+          if no response since
+               last ping
+    """
+    connect_websocket = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.connect_websocket')
+    send_message_mock = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.send_message')
+    socket = BitMEXWebsocket()
+    ping_handler = mocker.stub()
+    socket.on('ping', ping_handler)
+    latency_handler = mocker.stub()
+    socket.on('latency', latency_handler)
+
+    ping_message = "primus::ping::%s" % (time.time() * 1000)
+    socket.on_message(ping_message)
+    ping_handler.assert_called_once_with(ping_message)
+    latency_handler.assert_called_once()
 
 
 def test_connect_websocket_with_heartbeat(mocker):
@@ -97,21 +128,24 @@ def test_connect_websocket_without_heartbeat(mocker):
 
 
 def test_subscribe_to_channel(mocker):
-
-    send_message = mocker.patch(
-        'bitmex_websocket.websocket.BitMEXWebsocket.send_message')
     socket = BitMEXWebsocket()
-    socket.symbol = 'test_symbol'
     socket.heartbeatEnabled = False
-    socket.subscribe('test_channel')
+    message = {
+        "success": "true",
+        "subscribe": "instrument:XBTH17",
+        "request": {
+            "op": "subscribe",
+            "args": ["instrument:XBTH17"]
+        }
+    }
 
-    send_message.assert_called_with(
-        {'op': 'subscribe', 'args': ['test_channel:test_symbol']})
+    handler = mocker.stub()
+    socket.on('subscribe', handler)
+    socket.on_message(json.dumps(message))
+    handler.assert_called_once()
 
 
 def test_subscribe_instrument_on_message(mocker):
-    on_subscribe = mocker.patch(
-        'bitmex_websocket.websocket.BitMEXWebsocket.on_subscribe')
     socket = BitMEXWebsocket()
     message = {
         "success": "true",
@@ -121,9 +155,15 @@ def test_subscribe_instrument_on_message(mocker):
             "args": ["instrument:XBTH17"]
         }
     }
-    socket.on_message({}, json.dumps(message))
+    subscribe_handler = mocker.stub()
+    # socket.on('subscribe', subscribe_handler)
 
-    on_subscribe.assert_called_once()
+    @socket.on('subscribe')
+    def handler(message):
+        subscribe_handler(message)
+    socket.on_message(json.dumps(message))
+
+    subscribe_handler.assert_called_once_with(message)
 
 
 def test_on_subscribe_success(mocker):
@@ -138,9 +178,44 @@ def test_on_subscribe_success(mocker):
             "args": ["instrument:XBTH17"]
         }
     }
-    socket.on_subscribe(message)
+    subscribe_handler = mocker.stub()
+    socket.on('subscribe', subscribe_handler)
+    socket.emit('subscribe', message)
 
     error.assert_not_called()
+    subscribe_handler.assert_called_once_with(message)
+
+
+def test_subscribe_action_handler(mocker):
+    """
+    When calling BitMEXWebsocket.subscribe_action(), ensure a proper subscriptionMsg
+    message is sent and a subscription event is received when the channel is
+    subscribed.
+    """
+    send_message_mock = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.send_message')
+    on_subscribe_mock = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.on_subscribe')
+    socket = BitMEXWebsocket()
+    message = {
+        "success": "true",
+        "subscribe": "instrument:XBTH17",
+        "request": {
+            "op": "subscribe",
+            "args": ["instrument:XBTH17"]
+        }
+    }
+    partial_action_handler = mocker.stub()
+    socket.subscribe_action('partial',
+                            'orderBookL2',
+                            'XBTH17',
+                            partial_action_handler)
+    socket.on_message(json.dumps(message))
+    send_message_mock.assert_called_once()
+    on_subscribe_mock.assert_called_once()
+    partial_message = orderBookL2_data['partial']
+    socket.on_message(json.dumps(partial_message))
+    partial_action_handler.assert_called_once_with(partial_message)
 
 
 def test_on_subscribe_called_on_sub_error_message(mocker):
@@ -160,78 +235,35 @@ def test_on_subscribe_called_on_sub_error_message(mocker):
         }
     }
 
-    socket.on_message({}, json.dumps(message))
+    socket.on_message(json.dumps(message))
     error.assert_called_with("Unknown table: instrument_")
 
 
-def test_on_partial_action_data(mocker):
+def test_on_partial_action_message_data(mocker):
     socket = BitMEXWebsocket()
-    with open('./tests/fixtures/instrument_partial_action_message.json')\
-            as message_data:
-        message = json.load(message_data)
+    message = orderBookL2_data['partial']
+    partial_event_handler = mocker.stub()
+    event_name = socket.gen_action_event_key(
+                            message['action'],
+                            message['data'][0]['symbol'],
+                            message['table'])
+    socket.on(event_name, partial_event_handler)
+    socket.on_message(json.dumps(message))
 
-        action = message['action']
-        socket.on_action(action, message)
-
-        assert socket.data['instrument']
+    partial_event_handler.assert_called_once_with(message)
 
 
-def test_on_partial_orderBookL2_action_data(mocker):
+def test_on_action_triggers_events(mocker):
     socket = BitMEXWebsocket()
 
     message = orderBookL2_data['partial']
+    price_level = message['data'][0]
+    mock_event_handler = mocker.stub(name='on_order_book_partial_handler')
+    partial_event_name = socket.gen_action_event_key(
+        price_level['symbol'],
+        message['table'],
+        message['action'],)
 
-    action = message['action']
-    socket.on_action(action, message)
-
-    assert socket.data['orderBookL2']
-
-
-def test_on_orderBookL2_action_data(mocker):
-    """
-    Ensure orderBookL2 is updated on delete, insert and update actions.
-    """
-    socket = BitMEXWebsocket()
-
-    # Recieve partial action message
-    partial_action_message = orderBookL2_data['partial']
-    partial_data = partial_action_message['data']
-    socket.on_action('partial', partial_action_message)
-    orderBookL2 = socket.data['orderBookL2']
-    for partial_level in partial_data:
-        level = next(level for level in orderBookL2
-                    if level['id'] == partial_level['id'])
-        assert level
-
-    # Receive delete action message
-    delete_action_message = orderBookL2_data['delete']
-    delete_level_id = delete_action_message['data'][0]['id']
-
-    socket.on_action('delete', delete_action_message)
-    delete_level = next((level for level in partial_data
-                        if level['id'] == delete_level_id), None)
-    assert not delete_level
-
-    # Receive insert action message
-    insert_action_message = orderBookL2_data['insert']
-    socket.on_action('insert', insert_action_message)
-    insert_data = insert_action_message['data']
-
-    for insert_level in insert_data:
-        level = next(level for level in orderBookL2
-            if level['id'] == insert_level['id'])
-        assert level
-
-    # Receive update action message
-    update_action_message = orderBookL2_data['update']
-    update_data = update_action_message['data']
-    level_update = update_data[0]
-    socket.on_action('update', update_action_message)
-    updated_level = next(level for level in orderBookL2
-                        if level['id'] == level_update['id'])
-
-    assert updated_level['size'] == level_update['size']
-
-@pytest.mark.xfail
-def test_should_fail(self):
-    self.assertEqual(False, True)
+    socket.on(partial_event_name, mock_event_handler)
+    socket.emit(partial_event_name, message)
+    mock_event_handler.assert_called_with(message)
