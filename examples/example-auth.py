@@ -10,7 +10,7 @@ websocket.enableTrace(True)
 
 ws = BitMEXWebsocket()
 ws.connect(shouldAuth=True)
-ws.subscribe('instrument')
+ws.subscribe_action('instrument')
 
 while True:
     sleep(1)

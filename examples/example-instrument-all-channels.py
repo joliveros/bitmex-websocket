@@ -1,14 +1,16 @@
 from __future__ import absolute_import
 from bitmex_websocket.instrument import Instrument
-from time import sleep
-import logging
+import asyncio
 import websocket
 
-_logger = logging.getLogger('websocket')
-_logger.setLevel(logging.DEBUG)
 websocket.enableTrace(True)
 
-XBTH17 = Instrument(symbol='XBTH17', channels=['instrument'])
+XBTH17 = Instrument(symbol='XBTH17',
+                    channels=['orderBookL2'],
+                    maxTableLength=1,
+                    shouldAuth=True)
 
-while True:
-    sleep(1)
+XBTH17.on('action', lambda x: print("# action message: %s" % x))
+
+loop = asyncio.get_event_loop()
+loop.run_forever()

@@ -1,108 +1,152 @@
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import (absolute_import,
+                        division,
+                        print_function,
+                        unicode_literals)
 from builtins import *
-import sys
-import threading
-import traceback
-from time import sleep
-import json
-import decimal
-from bitmex_websocket.settings import settings
+from bitmex_websocket import constants
 from bitmex_websocket.utils.log import setup_custom_logger
 from bitmex_websocket.websocket import BitMEXWebsocket
 from pyee import EventEmitter
-
-# Don't grow a table larger than this amount. Helps cap memory usage.
-MAX_TABLE_LEN = 200
-CHANNELS = [
-    'chat',          # Trollbox chat
-    'connected',     # Statistics of connected users/bots
-    'instrument',    # Instrument updates including turnover and bid/ask
-    'insurance',     # Daily Insurance Fund updates
-    'liquidation',   # Liquidation orders as they're entered into the book
-    'orderBookL2',   # Full level 2 orderBook
-    'orderBook10',   # Top 10 levels using traditional full book push
-    'publicNotifications',  # System-wide notifications
-    'quote',         # Top level of the book
-    'quoteBin1m',    # 1-minute quote bins
-    'settlement',    # Settlements
-    'trade',         # Live trades
-    'tradeBin1m',    # 1-minute ticker bins
-]
-
-SECURE_CHANNELS = [
-    'affiliate',   # Affiliate status, such as total referred users & payout %
-    'execution',   # Individual executions; can be multiple per order
-    'order',       # Live updates on your orders
-    'margin',      # Updates on your current account balance and margin requirements
-    'position',    # Updates on your positions
-    'privateNotifications',  # Individual notifications - currently not used
-    'transact'     # Deposit/Withdrawal updates
-    'wallet'       # Bitcoin address balance data, including total deposits & withdrawals
-]
-
-# Actions that might be received for each table
-ACTIONS = ('partial', 'insert', 'update', 'delete')
+import json
 
 
 class Instrument(EventEmitter):
     def __init__(self,
                  symbol='XBTH17',
-                 channels=None,
-                 secureChannels=None,
+                 channels=[],
                  shouldAuth=False,
+                 maxTableLength=constants.MAX_TABLE_LEN,
                  websocket=None):
 
         EventEmitter.__init__(self)
-        self.logger = setup_custom_logger("Instrument:%s" % (symbol))
-        self.symbol = symbol
+        self.channels = channels
+
+        if maxTableLength > 0:
+            self.maxTableLength = maxTableLength
+        else:
+            self.maxTableLength = constants.MAX_TABLE_LEN
+
         self.shouldAuth = shouldAuth
+        self.symbol = symbol
+        self.websocket = websocket
+
         self.data = {
             'orderBookL2': [],
             'instrument': []
         }
 
-        self.websocket = BitMEXWebsocket()
+        self.logger = setup_custom_logger("instrument:%s" % (symbol))
+        self.init()
+
+    def init(self):
+        channels = self.channels
+        symbol = self.symbol
+        shouldAuth = self.shouldAuth
+        websocket = self.websocket
+
+        if not websocket:
+            self.websocket = BitMEXWebsocket()
+
         self.websocket.connect(
            shouldAuth,
            websocket
         )
 
         self.websocket.on('subscribe', self.on_subscribe)
+        self.websocket.on('latency', self.on_latency)
         self.channels = []
-        self.subscribe_to_channels(symbol, channels)
+        self.subscribe_to_channels(channels)
+        self.subscribe_to_instrument_channels(symbol, channels)
         self.secureChannels = []
         if shouldAuth:
-            self.subscribe_to_secure_channels(symbol, secureChannels)
+            self.subscribe_to_secure_instrument_channels(symbol, channels)
 
-    def subscribe_to_channels(self, symbol, channels):
+    def on_latency(self, message):
+        self.logger.debug("# on_latency")
+        self.logger.debug(message)
+
+        latency = []
+        if 'latency' not in self.data:
+            self.data['latency'] = []
+
+        if len(self.data['latency']) > self.maxTableLength - 1:
+            self.data['latency'].pop()
+
+        latency.append(message)
+
+        self.data['latency'] = latency
+
+        # calculate average latency
+        avg_latency = sum(latency)/len(latency)
+        self.emit('latency', avg_latency)
+        self.logger.debug("## avg latency: %s" % (avg_latency))
+
+    def get_latency(self):
+        return self.data['latency']
+
+    def subscribe_to_channels(self, channels):
         # Subscribe to all channels by default
-        if not channels:
-            _channels = CHANNELS
-        else:
-            _channels = channels
+        for channel in constants.CHANNELS:
+            if len(channels) > 0 and channel not in channels:
+                channel = None
 
-        for channel in _channels:
-            self.subscribe_actions_for_channel(symbol, channel)
+            if channel:
+                handler_name = "on_%s" % (channel)
+                handler = {}
+                if hasattr(self, handler_name):
+                    handler = getattr(self, handler_name)
+                else:
+                    handler = self.on_channel
 
-    def subscribe_to_secure_channels(self, symbol, channels):
+                self.websocket.subscribe(channel, handler)
+
+    def subscribe_to_secure_channels(self, channels):
         # Subscribe to all channels by default
-        if not channels:
-            _channels = SECURE_CHANNELS
-        else:
-            _channels = channels
+        for channel in constants.SECURE_CHANNELS:
+            if len(channels) > 0 and channel not in channels:
+                channel = None
 
-        for channel in _channels:
-            self.subscribe_actions_for_channel(symbol, channel)
+            if channel:
+                handler_name = "on_%s" % (channel)
+                handler = {}
+                if hasattr(self, handler_name):
+                    handler = getattr(self, handler_name)
+                else:
+                    handler = self.on_channel
 
-    def subscribe_actions_for_channel(self, symbol, channel):
-        for action in ACTIONS:
-            self.logger.debug(action)
-            self.logger.debug(channel)
-            self.websocket.subscribe(action,
-                                     channel,
-                                     symbol,
-                                     getattr(self, "on_%s" % (action)))
+                self.websocket.subscribe(channel, handler)
+
+    def subscribe_to_instrument_channels(self, symbol, channels):
+        # Subscribe to all channels by default
+        for channel in constants.INSTRUMENT_CHANNELS:
+            if len(channels) > 0 and channel not in channels:
+                channel = None
+
+            if channel:
+                self.subscribe_actions_for_channel(channel, symbol)
+
+    def subscribe_to_secure_instrument_channels(self, symbol, channels):
+        # Subscribe to all channels by default
+        for channel in constants.SECURE_INSTRUMENT_CHANNELS:
+            if len(channels) > 0 and channel not in channels:
+                channel = None
+
+            if channel:
+                self.subscribe_actions_for_channel(channel, symbol)
+
+    def subscribe_actions_for_channel(self, channel, symbol):
+        for action in constants.ACTIONS:
+            handler_name = "on_%s" % (channel)
+            handler = {}
+            if hasattr(self, handler_name):
+                handler = getattr(self, handler_name)
+            else:
+                handler = self.on_action
+
+            self.websocket.subscribe_action(action,
+                                            channel,
+                                            symbol,
+                                            handler)
 
     def on_subscribe(self, channel):
         self.channels.append(channel)
@@ -117,85 +161,65 @@ class Instrument(EventEmitter):
 
         return allChannels
 
-    def on_partial(self, message):
+    def on_channel(self, message):
+        self.logger.debug("#on_channel")
+        self.logger.debug(message)
+        for item in message['data']:
+            self.prepend_to_table(message['table'], item)
+
+    def on_action(self, message):
+        self.emit('action', message)
         table = message['table']
         data = message['data']
-        self.logger.debug("%s: partial" % table)
-        getattr(self, "update_%s" % (table))('partial', data)
-
-    def on_action(self, table, handler):
-        for action in ACTIONS:
-            self.websocket.subscribe(action,
-                                     table,
-                                     self.symbol,
-                                     handler)
-
-    def on_insert(self, message):
-        table = message['table']
+        self.logger.debug("on_action")
         action = message['action']
-        self.logger.debug('%s: inserting' % (table))
-        if table == 'orderBookL2':
-            return self.update_orderBookL2(action, message['data'])
 
-        self.data[table] += message['data']
+        if action == 'delete':
+            for item in data:
+                self.delete_from_table(table, item)
+        elif action == 'update':
+            for item in data:
+                if 'id' in item:
+                    self.update_item_in_table(table, item)
+                else:
+                    self.prepend_to_table(table, item)
+        else:
+            for item in data:
+                self.prepend_to_table(table, item)
 
-        # Limit the max length of the table to avoid excessive memory
-        # usage. Don't trim orders because we'll lose valuable state if
-        # we do.
-        max_len = BitMEXWebsocket.MAX_TABLE_LEN
-        if table != 'order' and len(self.data[table]) > max_len:
-            self.data[table] = self.data[table][(max_len // 2):]
+    def delete_from_table(self, table, item):
+        self.logger.debug('#delete_from_table:%s' % (table))
+        self.logger.debug(item)
+        if table not in self.data:
+            self.data[table] = []
+        delete_item = next(_item for _item in self.data['orderBookL2']
+                           if _item['id'] == item['id'])
+        if delete_item:
+            self.data[table].remove(delete_item)
 
-    def on_update(self, message):
-        table = message['table']
-        action = message['action']
-        self.logger.debug('%s: updating' % (table))
-        if table == 'orderBookL2':
-            return self.update_orderBookL2(action, message['data'])
+    def prepend_to_table(self, table, item):
+        if table not in self.data:
+            self.data[table] = []
+        isMaxLength = len(self.data[table]) == self.maxTableLength
+        if isMaxLength and 'orderBook' not in table:
+            self.data[table].pop()
 
-        self.logger.debug(message)
+        self.data[table].insert(0, item)
+        self.logger.debug('#prepend_to_table')
+        self.logger.debug(self.data[table])
 
-    def on_delete(self, message):
-        table = message['table']
-        action = message['action']
-        self.logger.debug('%s: deleting %s' % (table, message['data']))
-        if table == 'orderBookL2':
-            return self.update_orderBookL2(action, message['data'])
-        # Locate the item in the collection and remove it.
-        for deleteData in message['data']:
-            item = findItemByKeys(self.keys[table], self.data[table], deleteData)
-            self.data[table].remove(item)
+    def update_item_in_table(self, table, update):
+        self.logger.debug("# update_item_in_table")
+        self.logger.debug(json.dumps(update))
 
-    def update_orderBookL2(self, method, data):
-        self.logger.debug("update method: %s" % (method))
-        self.logger.debug(json.dumps(data))
-        if method == 'partial':
-            self.data['orderBookL2'] = data
-            self.emit('orderBookL2', self.data['orderBookL2'])
-        elif method == 'delete':
-            for delete in data:
-                level = next(level for level in self.data['orderBookL2']
-                             if level['id'] == delete['id'])
-                if level:
-                    self.logger.debug("delete level %s" % (json.dumps(level)))
-                    self.data['orderBookL2'].remove(level)
-        elif method == 'insert':
-            for level in data:
-                self.logger.debug("insert level %s" % (json.dumps(level)))
-                self.data['orderBookL2'].append(level)
-            self.emit('orderBookL2', self.data['orderBookL2'])
-        elif method == 'update':
-            for update in data:
-                level = next(level for level in self.data['orderBookL2']
-                             if level['id'] == update['id'])
-                self.logger.debug("update level %s" % (json.dumps(level)))
-                level['size'] = update['size']
-            self.emit('orderBookL2', self.data['orderBookL2'])
+        item_to_update = next(item for item in self.data[table]
+                              if item['id'] == update['id'])
 
+        item_to_update.update(update)
+
+    def get_table(self, table):
+        return self.data[table]
 
     def update_instrument(self, action, data):
         self.logger.debug(data)
         self.data['instrument'] = data[0]
-
-    def getTable(self, table):
-        return self.data[table]

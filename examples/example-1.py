@@ -10,7 +10,7 @@ websocket.enableTrace(True)
 
 ws = BitMEXWebsocket()
 ws.connect()
-ws.subscribe('instrument_')
+ws.subscribe_action('instrument_')
 
 loop = asyncio.get_event_loop()
 loop.run_forever()

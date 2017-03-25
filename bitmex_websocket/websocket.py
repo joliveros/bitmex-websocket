@@ -1,19 +1,22 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from builtins import *
-import sys
-import websocket
-import threading
-import traceback
-from time import sleep
-import json
+from bitmex_websocket import constants
+from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
 from bitmex_websocket.settings import settings
 from bitmex_websocket.utils.log import setup_custom_logger
-from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
-from urllib.parse import urlparse
 from pyee import EventEmitter
+from time import sleep
+from urllib.parse import urlparse
+import json
+import sys
+import threading
+import time
+import traceback
+import websocket
 
 PING_MESSAGE_PREFIX = 'primus::ping::'
+
 
 class BitMEXWebsocket(EventEmitter):
     def __init__(self):
@@ -26,7 +29,7 @@ class BitMEXWebsocket(EventEmitter):
             self,
             shouldAuth=False,
             websocket=None,
-            heartbeatEnabled=False):
+            heartbeatEnabled=True):
         '''Connect to the websocket and initialize data stores.'''
 
         self.logger.debug("Connecting WebSocket.")
@@ -51,8 +54,8 @@ class BitMEXWebsocket(EventEmitter):
 
     def connect_websocket(self):
         """Connect to the websocket in a thread."""
+        self.logger.debug("### Connecting Websocket ###")
 
-        self.logger.debug("Starting thread")
         self.init_websocket()
 
         # setup websocket.run_forever arguments
@@ -88,21 +91,19 @@ class BitMEXWebsocket(EventEmitter):
     def init_websocket(self):
         wsURL = self.build_websocket_url()
         self.logger.debug("Connecting to %s" % (wsURL))
-        self.ws = websocket.WebSocketApp(
-            wsURL,
-            on_message=self.on_message,
-            on_close=self.__on_close,
-            on_open=self.__on_open,
-            on_error=self.__on_error,
-            # We can login using
-            #  email/pass or API key
-            header=self.__get_auth())
+        self.ws = websocket.WebSocketApp(wsURL,
+                                         on_message=self.__on_message,
+                                         on_close=self.__on_close,
+                                         on_open=self.__on_open,
+                                         on_error=self.__on_error,
+                                         header=self.__get_auth())
 
     def websocket_run_forever(self, args):
         self.ws.run_forever(**args)
 
-    def subscribe(self, action, channel, instrument, action_handler):
+    def subscribe_action(self, action, channel, instrument, action_handler):
         channelKey = "{}:{}".format(channel, instrument)
+        self.logger.debug("Subscribe to action: %s" % (channelKey))
         subscriptionMsg = {"op": "subscribe", "args": [channelKey]}
         action_event_key = self.gen_action_event_key(action,
                                                      instrument,
@@ -112,8 +113,15 @@ class BitMEXWebsocket(EventEmitter):
 
         if channelKey not in self.channels:
             self.channels.append(channelKey)
-            self.logger.debug(self.channels)
-            self.logger.info(subscriptionMsg)
+            self.logger.debug(subscriptionMsg)
+            self.send_message(subscriptionMsg)
+
+    def subscribe(self, channel, handler):
+        subscriptionMsg = {"op": "subscribe", "args": [channel]}
+
+        self.on(channel, handler)
+        if channel not in self.channels:
+            self.channels.append(channel)
             self.send_message(subscriptionMsg)
 
     def send_message(self, message):
@@ -134,34 +142,52 @@ class BitMEXWebsocket(EventEmitter):
     def on_subscribe(self, message):
         if message['success']:
             self.logger.debug("Subscribed to %s." % message['subscribe'])
-            if message['subscribe'] not in self.channels:
-                self.channels.append(message['subscribe'])
         else:
             self.error("Unable to subscribe to %s. Error: \"%s\" Please\
             check and restart." % (
                 message['request']['args'][0], message['error']))
 
-    def on_message(self, ws, message):
+    def on_ping(self, message):
+        timestamp = float(time.time() * 1000)
+        ping_timestamp = float(message[14:])
+        latency = timestamp - ping_timestamp
+        self.logger.debug("ping: %s" % (message))
+        self.logger.debug("ping timestamp: %s" % (timestamp))
+        self.logger.debug("message latency: %s" % (latency))
+        self.emit('latency', latency)
+        self.logger.debug(int(timestamp))
+        self.send_message("primus::pong::%s" % (timestamp))
+
+    def __on_message(self, ws, message):
+        self.on_message(message)
+
+    def on_message(self, message):
         '''Handler for parsing WS messages.'''
         # Check if ping message
         ping_message = message[:14]
         if ping_message == PING_MESSAGE_PREFIX:
+            self.logger.debug(message)
             return self.emit('ping', message)
 
-        self.logger.debug(json.dumps(message, indent=4, sort_keys=True))
         message = json.loads(message)
+        self.logger.debug(json.dumps(message, indent=4, sort_keys=True))
 
         action = message['action'] if 'action' in message else None
 
         try:
             if action:
-                instrument = message['data'][0]['symbol']
                 table = message['table']
-                action_event = self.gen_action_event_key(action,
-                                                         instrument,
-                                                         table)
-                self.logger.debug(action_event)
-                self.emit(action_event, message)
+                event_name = ''
+                if table in constants.CHANNELS:
+                    event_name = "%s:%s" % (action, table)
+                else:
+                    if len(message['data']) > 0:
+                        instrument = message['data'][0]['symbol']
+                        event_name = self.gen_action_event_key(action,
+                                                               instrument,
+                                                               table)
+                self.logger.debug(event_name)
+                self.emit(event_name, message)
             elif 'subscribe' in message:
                 self.emit('subscribe', message)
             elif 'error' in message:
@@ -232,5 +258,6 @@ class BitMEXWebsocket(EventEmitter):
     def __reset(self):
         self.remove_all_listeners()
         self.on('subscribe', self.on_subscribe)
+        self.on('ping', self.on_ping)
         self.exited = False
         self._error = None
