@@ -1,2 +1,2 @@
-from bitmex_websocket.instrument import Instrument
-from bitmex_websocket.websocket import BitMEXWebsocket
+from .instrument import *
+from .websocket import *
