@@ -1,8 +1,8 @@
 import setuptools
 from bitmex_websocket.version import Version
 
-setuptools.setup(name='bitmex-websocket',
-                 version=Version('0.1.1').number,
+setuptools.setup(name='bitmex_websocket',
+                 version=Version('0.1.5').number,
                  description='Bitmex websocket API',
                  long_description=open('README.rst').read().strip(),
                  author='José Oliveros',
