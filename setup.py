@@ -2,13 +2,15 @@ import setuptools
 from bitmex_websocket.version import Version
 
 setuptools.setup(name='bitmex_websocket',
-                 version=Version('0.1.6').number,
+                 version=Version('0.1.8').number,
                  description='Bitmex websocket API',
                  long_description=open('README.rst').read().strip(),
                  author='José Oliveros',
                  author_email='jose.oliveros.1983@gmail.com',
                  url='https://github.com/joliveros/bitmex-websocket',
-                 packages=['bitmex_websocket'],
+                 packages=['bitmex_websocket',
+                           'bitmex_websocket.auth',
+                           'bitmex_websocket.utils'],
                  install_requires=[
                      'future',
                      'pyee',
