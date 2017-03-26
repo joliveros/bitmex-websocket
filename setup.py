@@ -14,7 +14,8 @@ setuptools.setup(name='bitmex_websocket',
                  install_requires=[
                      'future',
                      'pyee',
-                     'websocket-client'
+                     'websocket-client',
+                     'requests'
                  ],
                  license='MIT License',
                  zip_safe=True,
