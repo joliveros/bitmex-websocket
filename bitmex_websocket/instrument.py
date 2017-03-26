@@ -9,6 +9,7 @@ from bitmex_websocket.websocket import BitMEXWebsocket
 from pyee import EventEmitter
 import json
 
+__all__ = ['Instrument']
 
 class Instrument(EventEmitter):
     def __init__(self,

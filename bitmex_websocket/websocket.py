@@ -17,6 +17,7 @@ import websocket
 
 PING_MESSAGE_PREFIX = 'primus::ping::'
 
+__all__ = ['BitMEXWebsocket']
 
 class BitMEXWebsocket(EventEmitter):
     def __init__(self):
