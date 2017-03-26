@@ -188,6 +188,8 @@ class Instrument(EventEmitter):
             for item in data:
                 self.prepend_to_table(table, item)
 
+        self.emit(table, self.get_table(table))
+
     def delete_from_table(self, table, item):
         self.logger.debug('#delete_from_table:%s' % (table))
         self.logger.debug(item)
