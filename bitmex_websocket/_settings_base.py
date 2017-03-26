@@ -10,8 +10,7 @@ import os
 BASE_URL = ''
 if os.environ.get('RUN_ENV') == 'test':
     BASE_URL = "https://testnet.bitmex.com/api/v1/"
-
-if os.environ.get('RUN_ENV') == 'live':
+else:
     BASE_URL = "https://www.bitmex.com/api/v1/"
 
 # The BitMEX API requires permanent API keys. Go to https://testnet.bitmex.com/api/apiKeys to fill these out.

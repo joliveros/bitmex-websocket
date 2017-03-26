@@ -2,7 +2,7 @@ import setuptools
 from bitmex_websocket.version import Version
 
 setuptools.setup(name='bitmex_websocket',
-                 version=Version('0.1.11').number,
+                 version=Version('0.1.12').number,
                  description='Bitmex websocket API',
                  long_description=open('README.rst').read().strip(),
                  author='José Oliveros',
