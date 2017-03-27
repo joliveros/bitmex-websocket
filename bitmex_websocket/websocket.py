@@ -62,9 +62,6 @@ class BitMEXWebsocket(EventEmitter):
 
         # setup websocket.run_forever arguments
         wsRunArgs = {}
-        if self.heartbeatEnabled:
-            wsRunArgs['ping_timeout'] = 10
-            wsRunArgs['ping_interval'] = 25
 
         self.logger.debug("websocket.run_forever: %s" % (wsRunArgs))
 
