@@ -40,11 +40,15 @@ class Instrument(EventEmitter):
         self.logger = setup_custom_logger("instrument:%s" % (symbol))
         self.init()
 
-    def init(self):
+    def init(self, reset=False):
+        self.logger.debug("## init")
         channels = self.channels
         symbol = self.symbol
         shouldAuth = self.shouldAuth
         websocket = self.websocket
+
+        if reset:
+            websocket = self.websocket = BitMEXWebsocket()
 
         if not websocket:
             self.websocket = BitMEXWebsocket()

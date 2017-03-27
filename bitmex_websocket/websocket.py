@@ -63,8 +63,8 @@ class BitMEXWebsocket(EventEmitter):
         # setup websocket.run_forever arguments
         wsRunArgs = {}
         if self.heartbeatEnabled:
-            wsRunArgs['ping_timeout'] = 10
-            wsRunArgs['ping_interval'] = 25
+            wsRunArgs['ping_timeout'] = 20
+            wsRunArgs['ping_interval'] = 60
 
         self.logger.debug("websocket.run_forever: %s" % (wsRunArgs))
 
@@ -129,12 +129,14 @@ class BitMEXWebsocket(EventEmitter):
             self.send_message(subscriptionMsg)
 
     def subscribe(self, channel, handler):
-        subscriptionMsg = {"op": "subscribe", "args": [channel]}
 
         self.on(channel, handler)
         if channel not in self.channels:
             self.channels.append(channel)
-            self.send_message(subscriptionMsg)
+
+    def _subscribe_to_channel(self, channel):
+        subscriptionMsg = {"op": "subscribe", "args": [channel]}
+        self.send_message(subscriptionMsg)
 
     def send_message(self, message):
         self.ws.send(json.dumps(message))
@@ -262,11 +264,14 @@ class BitMEXWebsocket(EventEmitter):
 
     def __on_close(self, ws):
         self.logger.info('Websocket Closed')
+        self.emit('close')
         self.exit()
 
     def __on_error(self, ws, error):
+        self.emit('error', error)
         if not self.exited:
             self.error(error)
+            self.exit()
 
     def __reset(self):
         self.remove_all_listeners()

@@ -6,7 +6,7 @@ import websocket
 websocket.enableTrace(True)
 
 XBTUSD = Instrument(symbol='XBTUSD',
-                    channels=['quote'],
+                    channels=['trade'],
                     maxTableLength=1,
                     shouldAuth=False)
 
@@ -16,7 +16,7 @@ def on_table(table_name, table):
     print(table)
 
 
-XBTUSD.on('quote', on_table)
+XBTUSD.on('trade', on_table)
 
 loop = asyncio.get_event_loop()
 loop.run_forever()
