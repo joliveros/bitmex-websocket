@@ -10,8 +10,9 @@ import json
 import time
 from time import sleep
 
-orderBookL2_data = message_fixtures()['orderBookL2']
-
+fixtures = message_fixtures()
+orderBookL2_data = fixtures['orderBookL2']
+instrument_data = fixtures['instrument']
 
 def test_average_latency(mocker):
     """
@@ -57,15 +58,30 @@ def test_on_partial_action_instrument_data(mocker):
     init_mock = mocker.patch(
         'bitmex_websocket.Instrument.init')
 
-    subscribe_mock = mocker.patch('bitmex_websocket.BitMEXWebsocket.subscribe')
     instrument = Instrument()
-    with open('./tests/fixtures/instrument_partial_action_message.json')\
-            as message_data:
-        message = json.load(message_data)
+    partial_message = instrument_data['partial']
 
-        instrument.on_action(message)
+    instrument.on_action(partial_message)
 
-        assert instrument.data['instrument']
+    assert instrument.data['instrument']
+
+
+def test_on_update_action_instrument_data(mocker):
+    init_mock = mocker.patch(
+        'bitmex_websocket.Instrument.init')
+    partial_message = instrument_data['partial']
+    update_message = instrument_data['update']
+
+    instrument = Instrument()
+
+    instrument.on_action(partial_message)
+    assert instrument.data['instrument']
+
+    instrument.on_action(update_message)
+
+    updated_instrument_table = instrument.get_table('instrument')
+    assert updated_instrument_table[0]['impactAskPrice'] \
+        == update_message['data'][0]['impactAskPrice']
 
 
 def test_on_partial_orderBookL2_action_data(mocker):

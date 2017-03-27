@@ -6,9 +6,9 @@ import websocket
 websocket.enableTrace(True)
 
 XBTH17 = Instrument(symbol='XBTH17',
-                    channels=['orderBookL2'],
+                    channels=['instrument'],
                     maxTableLength=1,
-                    shouldAuth=True)
+                    shouldAuth=False)
 
 XBTH17.on('action', lambda x: print("# action message: %s" % x))
 

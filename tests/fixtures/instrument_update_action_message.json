@@ -1,0 +1,13 @@
+{
+    "action": "update",
+    "data": [
+        {
+            "impactAskPrice": 973.5487,
+            "impactBidPrice": 972.0913,
+            "impactMidPrice": 972.82,
+            "symbol": "XBTH17",
+            "timestamp": "2017-03-27T03:53:50.000Z"
+        }
+    ],
+    "table": "instrument"
+}
