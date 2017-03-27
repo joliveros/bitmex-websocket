@@ -14,6 +14,7 @@ fixtures = message_fixtures()
 orderBookL2_data = fixtures['orderBookL2']
 instrument_data = fixtures['instrument']
 
+
 def test_average_latency(mocker):
     """
     The BitMEXWebsocket emits 'latency' events every time a 'ping'
@@ -80,7 +81,7 @@ def test_on_update_action_instrument_data(mocker):
     instrument.on_action(update_message)
 
     updated_instrument_table = instrument.get_table('instrument')
-    assert updated_instrument_table[0]['impactAskPrice'] \
+    assert updated_instrument_table['impactAskPrice'] \
         == update_message['data'][0]['impactAskPrice']
 
 

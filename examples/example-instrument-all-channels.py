@@ -5,12 +5,12 @@ import websocket
 
 websocket.enableTrace(True)
 
-XBTH17 = Instrument(symbol='XBTH17',
-                    channels=['instrument'],
+XBTUSD = Instrument(symbol='XBTUSD',
+                    channels=['quote'],
                     maxTableLength=1,
                     shouldAuth=False)
 
-XBTH17.on('action', lambda x: print("# action message: %s" % x))
+XBTUSD.on('quote', lambda quote_table: print(quote_table))
 
 loop = asyncio.get_event_loop()
 loop.run_forever()

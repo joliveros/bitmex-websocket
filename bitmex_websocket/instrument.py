@@ -178,17 +178,21 @@ class Instrument(EventEmitter):
         if action == 'delete':
             for item in data:
                 self.delete_from_table(table, item)
-        elif action == 'update':
+        elif action == 'update' and 'id' in data[0]:
             for item in data:
-                if 'id' in item:
-                    self.update_item_in_table(table, item)
-                else:
-                    self.prepend_to_table(table, item)
-        else:
+                self.update_item_in_table(table, item)
+        elif 'id' not in data[0]:
+            self.data[table] = data[0]
+        elif action == 'partial' or action == 'insert':
             for item in data:
                 self.prepend_to_table(table, item)
+        else:
+            self.update_keys_in_table(table, data[0])
 
         self.emit(table, self.get_table(table))
+
+    def update_keys_in_table(self, table, update):
+        self.data[table].update(update)
 
     def delete_from_table(self, table, item):
         self.logger.debug('#delete_from_table:%s' % (table))
