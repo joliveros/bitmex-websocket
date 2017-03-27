@@ -62,6 +62,9 @@ class BitMEXWebsocket(EventEmitter):
 
         # setup websocket.run_forever arguments
         wsRunArgs = {}
+        if self.heartbeatEnabled:
+            wsRunArgs['ping_timeout'] = 10
+            wsRunArgs['ping_interval'] = 25
 
         self.logger.debug("websocket.run_forever: %s" % (wsRunArgs))
 
@@ -95,10 +98,20 @@ class BitMEXWebsocket(EventEmitter):
                                          on_close=self.__on_close,
                                          on_open=self.__on_open,
                                          on_error=self.__on_error,
-                                         header=self.__get_auth())
+                                         header=self.__get_auth(),
+                                         on_ping=self.__on_ping,
+                                         on_pong=self.__on_pong)
 
     def websocket_run_forever(self, args):
         self.ws.run_forever(**args)
+
+    def __on_ping(self, frame, data):
+        self.logger.debug('## ping')
+        self.logger.debug(data)
+
+    def __on_pong(self, frame, data):
+        self.logger.debug('## pong')
+        self.logger.debug(data)
 
     def subscribe_action(self, action, channel, instrument, action_handler):
         channelKey = "{}:{}".format(channel, instrument)
@@ -164,6 +177,7 @@ class BitMEXWebsocket(EventEmitter):
         '''Handler for parsing WS messages.'''
         # Check if ping message
         ping_message = message[:14]
+        self.logger.debug(ping_message)
         if ping_message == PING_MESSAGE_PREFIX:
             self.logger.debug(message)
             return self.emit('ping', message)
