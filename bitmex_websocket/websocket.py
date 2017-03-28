@@ -42,6 +42,13 @@ class BitMEXWebsocket(EventEmitter):
         self.logger.info('Connected to WS. Waiting for data images, this may \
         take a moment...')
 
+    def re_connect(self):
+        sleep(1)
+        self.connect_websocket()
+
+        for channel in self.channels:
+            self._subscribe_to_channel(channel)
+
     def build_websocket_url(self, base_url=settings.BASE_URL):
         self.logger.debug('Build websocket url from: %s' % (base_url))
 
@@ -129,7 +136,7 @@ class BitMEXWebsocket(EventEmitter):
             self.send_message(subscriptionMsg)
 
     def subscribe(self, channel, handler):
-
+        self._subscribe_to_channel(channel)
         self.on(channel, handler)
         if channel not in self.channels:
             self.channels.append(channel)
@@ -266,12 +273,14 @@ class BitMEXWebsocket(EventEmitter):
         self.logger.info('Websocket Closed')
         self.emit('close')
         self.exit()
+        self.re_connect()
 
     def __on_error(self, ws, error):
-        self.emit('error', error)
         if not self.exited:
+            self.emit('error', error)
             self.error(error)
             self.exit()
+            self.re_connect()
 
     def __reset(self):
         self.remove_all_listeners()

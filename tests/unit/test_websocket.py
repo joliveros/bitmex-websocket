@@ -101,7 +101,7 @@ def test_connect_websocket_with_heartbeat(mocker):
     socket.connect_websocket()
 
     websocket_run_forever.assert_called_with(
-        {'ping_timeout': 10, 'ping_interval': 25})
+        {'ping_timeout': 20, 'ping_interval': 60})
     init_websocket.assert_called_once()
     wait_for_connection.assert_called_once()
 
