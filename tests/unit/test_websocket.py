@@ -127,6 +127,21 @@ def test_connect_websocket_without_heartbeat(mocker):
     wait_for_connection.assert_called_once()
 
 
+def test_re_connect_on_error(mocker):
+    '''
+    Ensure heartbeat is disabled on the websocket.
+    '''
+    connect_websocket_mock = mocker.patch(
+        'bitmex_websocket.websocket.BitMEXWebsocket.connect_websocket')
+    socket = BitMEXWebsocket()
+    socket.shouldAuth = False
+    socket.heartbeatEnabled = False
+
+    socket.re_connect()
+
+    connect_websocket_mock.assert_called_once()
+
+
 def test_subscribe_to_channel(mocker):
     socket = BitMEXWebsocket()
     socket.heartbeatEnabled = False
