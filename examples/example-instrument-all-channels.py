@@ -3,20 +3,23 @@ from bitmex_websocket import Instrument
 import asyncio
 import websocket
 
-websocket.enableTrace(True)
+# websocket.enableTrace(True)
 
+def on_table(table_name, table):
+    print("recieved table: %s"  % (table_name))
+    print(table)
+
+channels = ['quote', 'trade']
 XBTUSD = Instrument(symbol='XBTUSD',
-                    channels=['trade'],
+                    channels=channels,
                     maxTableLength=1,
                     shouldAuth=False)
 
 
-def on_table(table_name, table):
-    print(table_name)
-    print(table)
+for channel in channels:
+    XBTUSD.on(channel, on_table)
 
 
-XBTUSD.on('trade', on_table)
 
 loop = asyncio.get_event_loop()
 loop.run_forever()

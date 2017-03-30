@@ -8,7 +8,7 @@ import os
 
 # API URL.
 BASE_URL = ''
-if os.environ.get('RUN_ENV') == 'test':
+if os.environ.get('RUN_ENV') == 'development':
     BASE_URL = "https://testnet.bitmex.com/api/v1/"
 else:
     BASE_URL = "https://www.bitmex.com/api/v1/"
@@ -18,7 +18,7 @@ BITMEX_API_KEY = os.environ.get('BITMEX_API_KEY')
 BITMEX_API_SECRET = os.environ.get('BITMEX_API_SECRET')
 
 # Available levels: logging.(DEBUG|INFO|WARN|ERROR)
-if os.environ.get('RUN_ENV') == 'test':
+if os.environ.get('RUN_ENV') == 'development':
     LOG_LEVEL = logging.DEBUG
 else:
     LOG_LEVEL = logging.INFO

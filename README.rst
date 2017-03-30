@@ -60,7 +60,7 @@ Run example scripts:
 
 .. code-block:: sh
 
-    $ RUN_ENV=test python -m examples.example-1
+    $ RUN_ENV=development python -m examples.example-1
 
 Tests
 -----
