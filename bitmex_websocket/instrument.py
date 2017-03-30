@@ -54,8 +54,8 @@ class Instrument(EventEmitter):
             self.websocket = BitMEXWebsocket()
 
         self.websocket.connect(
-           shouldAuth,
-           websocket
+           shouldAuth=shouldAuth,
+           websocket=websocket
         )
 
         self.websocket.on('subscribe', self.on_subscribe)
