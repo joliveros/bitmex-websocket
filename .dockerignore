@@ -1,0 +1,10 @@
+.cache
+__pycache__
+build
+dist
+.coverage
+.env
+.test-env
+coverage.xml
+*.egg-info
+htmlcov
