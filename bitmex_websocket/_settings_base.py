@@ -18,7 +18,7 @@ BITMEX_API_KEY = os.environ.get('BITMEX_API_KEY')
 BITMEX_API_SECRET = os.environ.get('BITMEX_API_SECRET')
 
 # Available levels: logging.(DEBUG|INFO|WARN|ERROR)
-if os.environ.get('RUN_ENV') == 'development':
-    LOG_LEVEL = logging.DEBUG
-else:
+LOG_LEVEL = os.environ.get('LOGGING')
+
+if not LOG_LEVEL:
     LOG_LEVEL = logging.INFO

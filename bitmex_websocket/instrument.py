@@ -4,10 +4,10 @@ from __future__ import (absolute_import,
                         unicode_literals)
 from builtins import *
 from bitmex_websocket import constants
-from bitmex_websocket.utils.log import setup_custom_logger
 from bitmex_websocket.websocket import BitMEXWebsocket
 from pyee import EventEmitter
 import json
+import alog
 
 __all__ = ['Instrument']
 
@@ -37,11 +37,10 @@ class Instrument(EventEmitter):
             'instrument': []
         }
 
-        self.logger = setup_custom_logger("instrument:%s" % (symbol))
         self.init()
 
     def init(self, reset=False):
-        self.logger.debug("## init")
+        alog.debug("## init")
         channels = self.channels
         symbol = self.symbol
         shouldAuth = self.shouldAuth
@@ -68,8 +67,8 @@ class Instrument(EventEmitter):
             self.subscribe_to_secure_instrument_channels(symbol, channels)
 
     def on_latency(self, message):
-        self.logger.debug("# on_latency")
-        self.logger.debug(message)
+        alog.debug("# on_latency")
+        alog.debug(message)
 
         latency = []
         if 'latency' not in self.data:
@@ -85,7 +84,7 @@ class Instrument(EventEmitter):
         # calculate average latency
         avg_latency = sum(latency)/len(latency)
         self.emit('latency', avg_latency)
-        self.logger.debug("## avg latency: %s" % (avg_latency))
+        alog.debug("## avg latency: %s" % (avg_latency))
 
     def get_latency(self):
         return self.data['latency']
@@ -168,8 +167,8 @@ class Instrument(EventEmitter):
         return allChannels
 
     def on_channel(self, message):
-        self.logger.debug("#on_channel")
-        self.logger.debug(message)
+        alog.debug("#on_channel")
+        alog.debug(message)
         for item in message['data']:
             self.prepend_to_table(message['table'], item)
 
@@ -177,7 +176,7 @@ class Instrument(EventEmitter):
         self.emit('action', message)
         table = message['table']
         data = message['data']
-        self.logger.debug("on_action")
+        alog.debug("on_action")
         action = message['action']
 
         if action == 'delete':
@@ -202,8 +201,8 @@ class Instrument(EventEmitter):
         self.data[table].update(update)
 
     def delete_from_table(self, table, item):
-        self.logger.debug('#delete_from_table:%s' % (table))
-        self.logger.debug(item)
+        alog.debug('#delete_from_table:%s' % (table))
+        alog.debug(item)
         if table not in self.data:
             self.data[table] = []
         delete_item = next(_item for _item in self.data['orderBookL2']
@@ -219,12 +218,12 @@ class Instrument(EventEmitter):
             self.data[table].pop()
 
         self.data[table].insert(0, item)
-        self.logger.debug('#prepend_to_table')
-        self.logger.debug(self.data[table])
+        alog.debug('#prepend_to_table')
+        alog.debug(self.data[table])
 
     def update_item_in_table(self, table, update):
-        self.logger.debug("# update_item_in_table")
-        self.logger.debug(json.dumps(update))
+        alog.debug("# update_item_in_table")
+        alog.debug(json.dumps(update))
 
         item_to_update = next(item for item in self.data[table]
                               if item['id'] == update['id'])
@@ -235,5 +234,5 @@ class Instrument(EventEmitter):
         return self.data[table]
 
     def update_instrument(self, action, data):
-        self.logger.debug(data)
+        alog.debug(data)
         self.data['instrument'] = data[0]
