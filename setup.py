@@ -17,7 +17,7 @@ def get_reqs_from_file(file):
 
 
 setup(name='bitmex_websocket',
-      version=Version('0.1.27').number,
+      version=Version('0.1.28').number,
       description='Bitmex websocket API',
       long_description=open('README.rst').read().strip(),
       author='José Oliveros',
