@@ -16,6 +16,7 @@ import websocket
 import alog
 
 PING_MESSAGE_PREFIX = 'primus::ping::'
+CONN_TIMEOUT = 60
 
 __all__ = ['BitMEXWebsocket']
 
@@ -35,6 +36,7 @@ class BitMEXWebsocket(EventEmitter):
 
         alog.debug("Connecting WebSocket.")
         self.shouldAuth = shouldAuth
+        alog.debug(f'heartbeatEnabled: {heartbeatEnabled}')
         self.heartbeatEnabled = heartbeatEnabled
         self.connect_websocket()
 
@@ -84,8 +86,8 @@ class BitMEXWebsocket(EventEmitter):
         self.wait_for_connection()
 
     def wait_for_connection(self):
+        conn_timeout = CONN_TIMEOUT
         # Wait for connect before continuing
-        conn_timeout = 5
         while (not self.ws.sock or not self.ws.sock.connected) \
                 and conn_timeout and not self._error:
             sleep(1)
@@ -148,6 +150,7 @@ class BitMEXWebsocket(EventEmitter):
         self.ws.send(json.dumps(message))
 
     def error(self, err):
+        alog.debug('this error...')
         self._error = err
         alog.error(err)
         self.exit()
@@ -233,7 +236,7 @@ class BitMEXWebsocket(EventEmitter):
     #
     def __get_auth(self):
         '''Return auth headers. Will use API Keys if present in settings.'''
-        alog.debug(self.shouldAuth)
+        alog.debug('shouldAuth: %s' % self.shouldAuth)
         if self.shouldAuth:
             alog.info("Authenticating with API Key.")
             # To auth to the WS using an API key, we generate a signature
@@ -242,11 +245,15 @@ class BitMEXWebsocket(EventEmitter):
             nonce = generate_nonce()
             api_signature = generate_signature(
                 settings.BITMEX_API_SECRET, 'GET', '/realtime', nonce, '')
-            return [
+
+            auth = [
                 "api-nonce: " + str(nonce),
                 "api-signature: " + api_signature,
                 "api-key:" + settings.BITMEX_API_KEY
             ]
+            alog.debug(auth)
+
+            return auth
         else:
             return []
 
