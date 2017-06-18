@@ -25,4 +25,5 @@ bump_patch:
 		@make set_git_config
 		@git add . && git commit -m "bump patch due to build."
 		@git tag $$(eval cat .version) -m "bump patch due to build."
+		@ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 		@git push origin
