@@ -3,3 +3,4 @@ requests~=2.14.0
 pyee~=3.0.3
 future~=0.16.0
 alog~=0.9.11
+semver~=2.7.7

@@ -1,4 +1,7 @@
-FROM python:3.6.1-slim
+FROM codequants/bitmex-websocket:base
+
+ENV MODULE_NAME bitmex-websocket
+ARG SECRETS_PASS
 
 COPY . /src
 
