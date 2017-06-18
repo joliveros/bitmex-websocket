@@ -19,6 +19,7 @@ pypi_register:
 set_git_config:
 		git config user.email "jose.oliveros.1983@gmail.com" && \
 		git config user.name "José Oliveros"
+		git config --global push.default matching
 
 bump_patch:
 		@python -c "from bump_version import bump_patch; bump_patch()"
