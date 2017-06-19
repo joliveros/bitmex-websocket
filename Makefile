@@ -25,7 +25,7 @@ config:
 		rm -rf dotfiles
 		if [ ! -f ~/.ssh ]; then \
     	echo "File not found!"; \
-			@make set_git_config; \
+			make set_git_config; \
 			git clone https://github.com/joliveros/dotfiles.git && cd ./dotfiles; \
 			gpg --passphrase $(SECRETS_PASS) dotfiles.tar.gz.gpg ; \
 			tar -xf dotfiles.tar.gz; \
