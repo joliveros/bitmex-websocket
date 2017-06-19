@@ -12,9 +12,10 @@ decrypt_pypirc:
 		openssl enc -aes-256-cbc -d -in .pypirc.secret -out $(HOME)/.pypirc -k $(RUN_ARGS)
 
 pypi_register:
-		make decrypt_pypirc $(SECRETS_PASS) && \
-		python ./setup.py register -r pypi && \
-		python ./setup.py sdist upload -r pypi
+		@make decrypt_pypirc $(SECRETS_PASS)
+		@python ./setup.py register -r pypi
+		@python ./setup.py sdist bdist_wheel
+		@python ./setup.py sdist bdist_wheel upload -r pypi
 
 set_git_config:
 		git config --global push.default matching
@@ -39,5 +40,4 @@ bump_patch:
 		@git tag $$(eval cat .version) -m "bump patch due to build."
 		@ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 		@git push origin
-		@python ./setup.py sdist bdist_wheel
-		@python ./setup.py upload
+		@make pypi_register
