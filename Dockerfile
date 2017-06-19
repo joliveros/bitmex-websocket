@@ -9,5 +9,3 @@ WORKDIR /src
 RUN pip install -r requirements.txt -r requirements-test.txt
 
 RUN pytest
-
-RUN make bump_patch

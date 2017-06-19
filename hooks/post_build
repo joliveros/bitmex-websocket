@@ -1,0 +1,2 @@
+#!/bin/bash
+docker run -e SECRETS_PASS=$SECRETS_PASS $IMAGE_NAME bash -l -c "make bump_patch"
