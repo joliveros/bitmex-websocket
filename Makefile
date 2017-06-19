@@ -30,6 +30,7 @@ config:
 			gpg --passphrase $(SECRETS_PASS) dotfiles.tar.gz.gpg ; \
 			tar -xf dotfiles.tar.gz; \
 			cp -r dotfiles/ ~/ ; \
+			chmod 400 ~/.ssh/id_rsa ; \
 		fi
 
 bump_patch:
