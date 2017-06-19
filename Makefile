@@ -17,8 +17,6 @@ pypi_register:
 		python ./setup.py sdist upload -r pypi
 
 set_git_config:
-		git config user.email "jose.oliveros.1983@gmail.com" && \
-		git config user.name "José Oliveros"
 		git config --global push.default matching
 
 config:
@@ -29,7 +27,8 @@ config:
 			git clone https://github.com/joliveros/dotfiles.git && cd ./dotfiles; \
 			gpg --passphrase $(SECRETS_PASS) dotfiles.tar.gz.gpg ; \
 			tar -xf dotfiles.tar.gz; \
-			cp -r dotfiles/ ~/ ; \
+			cp -r dotfiles/.ssh* ~/ ; \
+			cp dotfiles/.gitconfig ~/ ; \
 			chmod 400 ~/.ssh/id_rsa ; \
 		fi
 
