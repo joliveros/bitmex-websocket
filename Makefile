@@ -12,6 +12,7 @@ decrypt_pypirc:
 		openssl enc -aes-256-cbc -d -in .pypirc.secret -out $(HOME)/.pypirc -k $(RUN_ARGS)
 
 pypi_register:
+		@rm -rf dist
 		@make decrypt_pypirc $(SECRETS_PASS)
 		@python ./setup.py register -r pypi
 		@python ./setup.py sdist bdist_wheel

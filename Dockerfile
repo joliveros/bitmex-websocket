@@ -11,4 +11,4 @@ RUN pip install -r requirements.txt -r requirements-test.txt
 
 RUN pytest
 
-RUN python ./setup.py install
+RUN make bump_patch
