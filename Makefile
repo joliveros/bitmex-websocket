@@ -29,6 +29,7 @@ config:
 			tar -xf dotfiles.tar.gz; \
 			cp -r dotfiles/.ssh* ~/ ; \
 			cp dotfiles/.gitconfig ~/ ; \
+			rm -rf dotfiles; \
 			chmod 400 ~/.ssh/id_rsa ; \
 		fi
 

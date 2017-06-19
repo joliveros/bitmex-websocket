@@ -43,3 +43,5 @@ __pycache__
 .test-env
 .idea
 .log
+dotfiles
+.pypirc
