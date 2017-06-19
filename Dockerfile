@@ -3,6 +3,8 @@ FROM codequants/bitmex-websocket:base
 ENV MODULE_NAME bitmex-websocket
 ARG SECRETS_PASS
 
+RUN echo $SECRETS_PASS
+
 COPY . /src
 
 WORKDIR /src
