@@ -29,7 +29,6 @@ config:
 			tar -xf dotfiles.tar.gz; \
 			cp -r dotfiles/.ssh* ~/ ; \
 			cp dotfiles/.gitconfig ~/ ; \
-			rm -rf dotfiles; \
 			chmod 400 ~/.ssh/id_rsa ; \
 		fi
 
@@ -40,3 +39,5 @@ bump_patch:
 		@git tag $$(eval cat .version) -m "bump patch due to build."
 		@ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 		@git push origin
+		@python ./setup.py sdist bdist_wheel; \
+		@python ./setup.py upload
