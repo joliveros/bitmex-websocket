@@ -21,9 +21,20 @@ set_git_config:
 		git config user.name "José Oliveros"
 		git config --global push.default matching
 
+config:
+		rm -rf dotfiles
+		if [ ! -f ~/.ssh ]; then \
+    	echo "File not found!"; \
+			@make set_git_config; \
+			git clone https://github.com/joliveros/dotfiles.git && cd ./dotfiles; \
+			gpg --passphrase $(SECRETS_PASS) dotfiles.tar.gz.gpg ; \
+			tar -xf dotfiles.tar.gz; \
+			cp -r dotfiles/ ~/ ; \
+		fi
+
 bump_patch:
+		@make config
 		@python -c "from bump_version import bump_patch; bump_patch()"
-		@make set_git_config
 		@git add . && git commit -m "bump patch due to build."
 		@git tag $$(eval cat .version) -m "bump patch due to build."
 		@ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
