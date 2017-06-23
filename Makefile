@@ -1,19 +1,14 @@
-# use the rest as arguments for "run"
-RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-# ...and turn them into do-nothing targets
-$(eval $(RUN_ARGS):;@:)
-
 .PHONY: encrypt_pypirc decrypt_pypirc pypi_register set_git_config bump_patch
 
 encrypt_pypirc:
-		openssl enc -aes-256-cbc -salt -in ~/.pypirc -out .pypirc.secret -k $(RUN_ARGS)
+		openssl enc -aes-256-cbc -salt -in ~/.pypirc -out .pypirc.secret -k $(SECRETS_PASS)
 
 decrypt_pypirc:
-		openssl enc -aes-256-cbc -d -in .pypirc.secret -out $(HOME)/.pypirc -k $(RUN_ARGS)
+		openssl enc -aes-256-cbc -d -in .pypirc.secret -out $(HOME)/.pypirc -k $(SECRETS_PASS)
 
 pypi_register:
 		@rm -rf dist
-		@make decrypt_pypirc $(SECRETS_PASS)
+		@make decrypt_pypirc
 		@python ./setup.py register -r pypi
 		@python ./setup.py sdist bdist_wheel
 		@python ./setup.py sdist bdist_wheel upload -r pypi
@@ -36,7 +31,8 @@ config:
 
 bump_patch:
 		if [ $(shell git rev-parse --abbrev-ref HEAD) = master ]; then \
-			if [ $(shell git log -1 --pretty=%B) | grep -Eq 'build:']; then \
+			if test $(findstring "build:",$(shell git log -1 --pretty=%B)); then \
+				echo "last commit was result of a build."; else \
 				make config; \
 				python -c "from bump_version import bump_patch; bump_patch()"; \
 				git add . && git commit -m "build: bump patch due to build."; \
@@ -44,5 +40,5 @@ bump_patch:
 				ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts; \
 				git push origin; \
 				make pypi_register; \
-			fi;\
+			fi; \
 		fi
