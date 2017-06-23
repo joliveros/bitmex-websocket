@@ -1,5 +1,5 @@
-websocket-client~=0.40.0
-requests~=2.14.0
+websocket-client~=0.43.0
+requests~=2.18.0
 pyee~=3.0.3
 future~=0.16.0
 alog~=0.9.11
