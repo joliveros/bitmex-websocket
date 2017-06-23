@@ -1,19 +1,20 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from builtins import *
 from bitmex_websocket import constants
 from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
 from bitmex_websocket.settings import settings
+from builtins import *
 from pyee import EventEmitter
 from time import sleep
 from urllib.parse import urlparse
+import alog
 import json
+import ssl
 import sys
 import threading
 import time
 import traceback
 import websocket
-import alog
 
 PING_MESSAGE_PREFIX = 'primus::ping::'
 CONN_TIMEOUT = 60
@@ -69,7 +70,10 @@ class BitMEXWebsocket(EventEmitter):
         self.init_websocket()
 
         # setup websocket.run_forever arguments
-        wsRunArgs = {}
+        wsRunArgs = {
+            'sslopt': {"cert_reqs": ssl.CERT_NONE}
+        }
+
         if self.heartbeatEnabled:
             wsRunArgs['ping_timeout'] = 20
             wsRunArgs['ping_interval'] = 60
