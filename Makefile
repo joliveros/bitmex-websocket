@@ -22,7 +22,7 @@ config:
     	echo "File not found!"; \
 			make set_git_config; \
 			git clone https://github.com/joliveros/dotfiles.git && cd ./dotfiles; \
-			gpg --passphrase $(SECRETS_PASS) dotfiles.tar.gz.gpg ; \
+			@-gpg --passphrase $(SECRETS_PASS) dotfiles.tar.gz.gpg ; \
 			tar -xf dotfiles.tar.gz; \
 			cp -r dotfiles/.ssh* ~/ ; \
 			cp dotfiles/.gitconfig ~/ ; \
