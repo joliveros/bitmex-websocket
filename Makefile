@@ -36,11 +36,13 @@ config:
 
 bump_patch:
 		if [ $(shell git rev-parse --abbrev-ref HEAD) = master ]; then \
-			make config; \
-			python -c "from bump_version import bump_patch; bump_patch()"; \
-			git add . && git commit -m "bump patch due to build."; \
-			git tag $$(eval cat .version) -m "bump patch due to build."; \
-			ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts; \
-			git push origin; \
-			make pypi_register; \
+			if [ $(shell git log -1 --pretty=%B) | grep -Eq 'build:']; then \
+				make config; \
+				python -c "from bump_version import bump_patch; bump_patch()"; \
+				git add . && git commit -m "build: bump patch due to build."; \
+				git tag $$(eval cat .version) -m "bump patch due to build."; \
+				ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts; \
+				git push origin; \
+				make pypi_register; \
+			fi;\
 		fi
