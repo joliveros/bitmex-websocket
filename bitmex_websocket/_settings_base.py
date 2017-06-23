@@ -1,6 +1,7 @@
 from os.path import join
 import logging
 import os
+import alog
 
 ########################################################################################################################
 # Connection/Auth
@@ -18,7 +19,9 @@ BITMEX_API_KEY = os.environ.get('BITMEX_API_KEY')
 BITMEX_API_SECRET = os.environ.get('BITMEX_API_SECRET')
 
 # Available levels: logging.(DEBUG|INFO|WARN|ERROR)
-LOG_LEVEL = os.environ.get('LOGGING')
+LOG_LEVEL = os.environ.get('LOG_LEVEL')
 
 if not LOG_LEVEL:
     LOG_LEVEL = logging.INFO
+
+alog.set_level(LOG_LEVEL)
