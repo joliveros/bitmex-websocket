@@ -10,8 +10,8 @@ pypi_register:
 		@rm -rf dist
 		@make decrypt_pypirc
 		@python ./setup.py register -r pypi
-		@python ./setup.py sdist bdist_wheel
-		@python ./setup.py sdist bdist_wheel upload -r pypi
+		@python ./setup.py sdist bdist_wheel bdist_egg
+		@python ./setup.py sdist bdist_wheel bdist_egg upload -r pypi
 
 set_git_config:
 		git config --global push.default matching
