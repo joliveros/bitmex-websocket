@@ -10,6 +10,7 @@ from tests.helpers import message_fixtures
 import pytest
 import time
 import json
+import ssl
 
 orderBookL2_data = message_fixtures()['orderBookL2']
 
@@ -100,8 +101,11 @@ def test_connect_websocket_with_heartbeat(mocker):
     socket.heartbeatEnabled = True
     socket.connect_websocket()
 
-    websocket_run_forever.assert_called_with(
-        {'ping_timeout': 20, 'ping_interval': 60})
+    websocket_run_forever.assert_called_with({
+        'sslopt': {"cert_reqs": ssl.CERT_NONE},
+        'ping_timeout': 20,
+        'ping_interval': 60
+    })
     init_websocket.assert_called_once()
     wait_for_connection.assert_called_once()
 
@@ -122,7 +126,7 @@ def test_connect_websocket_without_heartbeat(mocker):
     socket.connect_websocket()
 
     # neither ping_timeout or ping_interval are passed as args
-    websocket_run_forever.assert_called_with({})
+    websocket_run_forever.assert_called_with({'sslopt': {"cert_reqs": ssl.CERT_NONE}})
     init_websocket.assert_called_once()
     wait_for_connection.assert_called_once()
 
