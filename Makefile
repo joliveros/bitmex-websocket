@@ -31,7 +31,7 @@ config:
 
 bump_patch:
 		if [ $(shell git rev-parse --abbrev-ref HEAD) = master ]; then \
-			if test $(findstring "build:",$(shell git log -1 --pretty=%B)); then \
+			if test $(findstring build:,$(shell git log -1 --pretty=%B)); then \
 				echo "last commit was result of a build."; else \
 				make config; \
 				python -c "from bump_version import bump_patch; bump_patch()"; \
