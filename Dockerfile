@@ -6,6 +6,8 @@ COPY . /src
 
 WORKDIR /src
 
-RUN pip install -r requirements.txt -r requirements-test.txt
+
+RUN pip install --upgrade pip setuptools && \
+    pip install -r requirements.txt -r requirements-test.txt
 
 RUN pytest
