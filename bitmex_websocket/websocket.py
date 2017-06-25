@@ -37,7 +37,7 @@ class BitMEXWebsocket(EventEmitter):
 
         alog.debug("Connecting WebSocket.")
         self.shouldAuth = shouldAuth
-        alog.debug(f'heartbeatEnabled: {heartbeatEnabled}')
+        alog.debug('heartbeatEnabled: %s' % heartbeatEnabled)
         self.heartbeatEnabled = heartbeatEnabled
         self.connect_websocket()
 
