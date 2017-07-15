@@ -22,5 +22,12 @@ for channel in channels:
     XBTUSD.on(channel, on_table)
 
 
+def ws_error_handler(loop, err):
+    alog.debug('# asyncio error handler...')
+    raise err
+
 loop = asyncio.get_event_loop()
+
+loop.set_exception_handler(ws_error_handler)
+
 loop.run_forever()
