@@ -114,7 +114,6 @@ class BitMEXWebsocket(EventEmitter):
         wsURL = self.build_websocket_url()
         alog.debug("Connecting to %s" % (wsURL))
         self.ws = websocket.WebSocketApp(wsURL,
-                                         keep_running=False,
                                          on_message=self.__on_message,
                                          on_close=self.__on_close,
                                          on_open=self.__on_open,
