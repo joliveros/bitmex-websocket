@@ -17,7 +17,8 @@ import traceback
 import websocket
 
 PING_MESSAGE_PREFIX = 'primus::ping::'
-CONN_TIMEOUT = 60
+CONN_TIMEOUT = 15
+MAX_RECONNECT = 2
 
 __all__ = ['BitMEXWebsocket']
 
@@ -26,6 +27,7 @@ class BitMEXWebsocket(EventEmitter):
     def __init__(self):
         EventEmitter.__init__(self)
         self.channels = []
+        self.reconnect_count = 0
         self.__reset()
 
     def connect(
@@ -45,7 +47,13 @@ class BitMEXWebsocket(EventEmitter):
         take a moment...')
 
     def re_connect(self):
+        alog.debug('## attempt reconnect: %s' % self.reconnect_count)
+        if self.reconnect_count == MAX_RECONNECT:
+            raise Exception("Exceeded reconnection attempts.")
+
         sleep(1)
+
+        self.reconnect_count += 1
         self.connect_websocket()
 
         for channel in self.channels:
@@ -86,7 +94,7 @@ class BitMEXWebsocket(EventEmitter):
         )
         self.wst.daemon = True
         self.wst.start()
-        alog.info("Started thread")
+        alog.info("### Started thread")
         self.wait_for_connection()
 
     def wait_for_connection(self):
@@ -98,14 +106,15 @@ class BitMEXWebsocket(EventEmitter):
             conn_timeout -= 1
 
         if not conn_timeout or self._error:
-            alog.error("Couldn't connect to WS! Exiting.")
-            self.exit()
-            sys.exit(1)
+            raise Exception("Couldn't connect to WS! Exiting.")
+
+        self.reconnect_count = 0
 
     def init_websocket(self):
         wsURL = self.build_websocket_url()
         alog.debug("Connecting to %s" % (wsURL))
         self.ws = websocket.WebSocketApp(wsURL,
+                                         keep_running=False,
                                          on_message=self.__on_message,
                                          on_close=self.__on_close,
                                          on_open=self.__on_open,
