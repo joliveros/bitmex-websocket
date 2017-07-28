@@ -174,9 +174,7 @@ class Instrument(EventEmitter):
 
     def on_action(self, message):
         self.emit('action', message)
-
-        if self.max_table_length == 0:
-            return
+        return
         table = message['table']
         data = message['data']
         alog.debug("on_action")
