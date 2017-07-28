@@ -14,7 +14,7 @@ def on_table(table_name, table):
 channels = ['quote', 'trade']
 XBTUSD = Instrument(symbol='XBTUSD',
                     channels=channels,
-                    maxTableLength=1,
+                    max_table_length=1,
                     shouldAuth=False)
 
 

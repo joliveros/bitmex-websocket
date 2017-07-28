@@ -1,0 +1,20 @@
+{
+    "action": "update",
+    "data": [
+        {
+            "account": 2690,
+            "avgPx": 2671.4,
+            "clOrdID": "",
+            "cumQty": 1,
+            "leavesQty": 0,
+            "ordStatus": "Filled",
+            "orderID": "1bf21c29-f30c-9ef0-6fc0-fea73e80e94e",
+            "simpleCumQty": 0.00037434,
+            "simpleLeavesQty": 0,
+            "symbol": "XBTUSD",
+            "timestamp": "2017-07-27T22:58:11.631Z",
+            "workingIndicator": false
+        }
+    ],
+    "table": "order"
+}

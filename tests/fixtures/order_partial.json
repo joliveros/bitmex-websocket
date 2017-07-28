@@ -1,0 +1,58 @@
+{
+    "action": "partial",
+    "attributes": {
+        "account": "grouped",
+        "ordStatus": "grouped",
+        "orderID": "grouped",
+        "workingIndicator": "grouped"
+    },
+    "data": [],
+    "filter": {
+        "account": 2690,
+        "symbol": "XBTUSD"
+    },
+    "foreignKeys": {
+        "ordStatus": "ordStatus",
+        "side": "side",
+        "symbol": "instrument"
+    },
+    "keys": [
+        "orderID"
+    ],
+    "table": "order",
+    "types": {
+        "account": "long",
+        "avgPx": "float",
+        "clOrdID": "symbol",
+        "clOrdLinkID": "symbol",
+        "contingencyType": "symbol",
+        "cumQty": "long",
+        "currency": "symbol",
+        "displayQty": "long",
+        "exDestination": "symbol",
+        "execInst": "symbol",
+        "leavesQty": "long",
+        "multiLegReportingType": "symbol",
+        "ordRejReason": "symbol",
+        "ordStatus": "symbol",
+        "ordType": "symbol",
+        "orderID": "guid",
+        "orderQty": "long",
+        "pegOffsetValue": "float",
+        "pegPriceType": "symbol",
+        "price": "float",
+        "settlCurrency": "symbol",
+        "side": "symbol",
+        "simpleCumQty": "float",
+        "simpleLeavesQty": "float",
+        "simpleOrderQty": "float",
+        "stopPx": "float",
+        "symbol": "symbol",
+        "text": "symbol",
+        "timeInForce": "symbol",
+        "timestamp": "timestamp",
+        "transactTime": "timestamp",
+        "triggered": "symbol",
+        "workingIndicator": "boolean"
+    }
+}
