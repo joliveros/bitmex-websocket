@@ -17,16 +17,16 @@ class Instrument(EventEmitter):
                  symbol='XBTH17',
                  channels=[],
                  shouldAuth=False,
-                 maxTableLength=constants.MAX_TABLE_LEN,
+                 max_table_length=constants.MAX_TABLE_LEN,
                  websocket=None):
 
         EventEmitter.__init__(self)
         self.channels = channels
 
-        if maxTableLength > 0:
-            self.maxTableLength = maxTableLength
+        if max_table_length > 0:
+            self.max_table_length = max_table_length
         else:
-            self.maxTableLength = constants.MAX_TABLE_LEN
+            self.max_table_length = constants.MAX_TABLE_LEN
 
         self.shouldAuth = shouldAuth
         self.symbol = symbol
@@ -74,7 +74,7 @@ class Instrument(EventEmitter):
         if 'latency' not in self.data:
             self.data['latency'] = []
 
-        if len(self.data['latency']) > self.maxTableLength - 1:
+        if len(self.data['latency']) > self.max_table_length - 1:
             self.data['latency'].pop()
 
         latency.append(message)
@@ -174,6 +174,9 @@ class Instrument(EventEmitter):
 
     def on_action(self, message):
         self.emit('action', message)
+
+        if self.max_table_length == 0:
+            return
         table = message['table']
         data = message['data']
         alog.debug("on_action")
@@ -213,7 +216,7 @@ class Instrument(EventEmitter):
     def prepend_to_table(self, table, item):
         if table not in self.data:
             self.data[table] = []
-        isMaxLength = len(self.data[table]) == self.maxTableLength
+        isMaxLength = len(self.data[table]) == self.max_table_length
         if isMaxLength and 'orderBook' not in table:
             self.data[table].pop()
 
