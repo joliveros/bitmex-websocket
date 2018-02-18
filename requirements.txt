@@ -1,6 +1,6 @@
 websocket-client
-requests~=2.18.0
+requests
 pyee~=3.0.3
 future~=0.16.0
 alog
-semver~=2.7.7
+semver
