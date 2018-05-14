@@ -3,8 +3,12 @@ from __future__ import (absolute_import,
                         print_function,
                         unicode_literals)
 from builtins import *
+
+from websocket import WebSocketConnectionClosedException, \
+    WebSocketTimeoutException, WebSocketException
+
 from bitmex_websocket import constants
-from bitmex_websocket.websocket import BitMEXWebsocket
+from bitmex_websocket._bitmex_websocket import BitMEXWebsocket
 from pyee import EventEmitter
 import json
 import alog
@@ -12,15 +16,19 @@ import alog
 __all__ = ['Instrument']
 
 
-class Instrument(EventEmitter):
+class Instrument(BitMEXWebsocket):
     def __init__(self,
                  symbol='XBTH17',
-                 channels=[],
-                 shouldAuth=False,
-                 max_table_length=constants.MAX_TABLE_LEN,
-                 websocket=None):
+                 channels=None,
+                 should_auth=False,
+                 max_table_length=constants.MAX_TABLE_LEN):
 
-        EventEmitter.__init__(self)
+        BitMEXWebsocket.__init__(self, should_auth)
+
+        self.secure_channels = []
+
+        if channels is None:
+            channels = []
         self.channels = channels
 
         if max_table_length > 0:
@@ -28,68 +36,26 @@ class Instrument(EventEmitter):
         else:
             self.max_table_length = constants.MAX_TABLE_LEN
 
-        self.shouldAuth = shouldAuth
         self.symbol = symbol
-        self.websocket = websocket
 
         self.data = {
             'orderBookL2': [],
             'instrument': []
         }
 
-        self.init()
+    def connect(self):
+        self.on('open', self._subscribe_channels)
+        super().connect()
 
-    def init(self, reset=False):
-        alog.debug("## init")
+    def _subscribe_channels(self):
+        self.subscribe_to_channels()
+        self.subscribe_to_instrument_channels()
+
+        if self.should_auth:
+            self.subscribe_to_secure_instrument_channels()
+
+    def subscribe_to_channels(self):
         channels = self.channels
-        symbol = self.symbol
-        shouldAuth = self.shouldAuth
-        websocket = self.websocket
-
-        if reset:
-            websocket = self.websocket = BitMEXWebsocket()
-
-        if not websocket:
-            self.websocket = BitMEXWebsocket()
-
-        self.websocket.connect(
-           shouldAuth=shouldAuth,
-           websocket=websocket
-        )
-
-        self.websocket.on('subscribe', self.on_subscribe)
-        self.websocket.on('latency', self.on_latency)
-        self.channels = []
-        self.subscribe_to_channels(channels)
-        self.subscribe_to_instrument_channels(symbol, channels)
-        self.secureChannels = []
-        if shouldAuth:
-            self.subscribe_to_secure_instrument_channels(symbol, channels)
-
-    def on_latency(self, message):
-        alog.debug("# on_latency")
-        alog.debug(message)
-
-        latency = []
-        if 'latency' not in self.data:
-            self.data['latency'] = []
-
-        if len(self.data['latency']) > self.max_table_length - 1:
-            self.data['latency'].pop()
-
-        latency.append(message)
-
-        self.data['latency'] = latency
-
-        # calculate average latency
-        avg_latency = sum(latency)/len(latency)
-        self.emit('latency', avg_latency)
-        alog.debug("## avg latency: %s" % (avg_latency))
-
-    def get_latency(self):
-        return self.data['latency']
-
-    def subscribe_to_channels(self, channels):
         # Subscribe to all channels by default
         for channel in constants.CHANNELS:
             if len(channels) > 0 and channel not in channels:
@@ -103,9 +69,11 @@ class Instrument(EventEmitter):
                 else:
                     handler = self.on_channel
 
-                self.websocket.subscribe(channel, handler)
+                self.subscribe(channel, handler)
 
-    def subscribe_to_secure_channels(self, channels):
+    def subscribe_to_secure_channels(self):
+        channels = self.channels
+
         # Subscribe to all channels by default
         for channel in constants.SECURE_CHANNELS:
             if len(channels) > 0 and channel not in channels:
@@ -119,9 +87,12 @@ class Instrument(EventEmitter):
                 else:
                     handler = self.on_channel
 
-                self.websocket.subscribe(channel, handler)
+                self.subscribe(channel, handler)
 
-    def subscribe_to_instrument_channels(self, symbol, channels):
+    def subscribe_to_instrument_channels(self):
+        channels = self.channels
+        symbol = self.symbol
+
         # Subscribe to all channels by default
         for channel in constants.INSTRUMENT_CHANNELS:
             if len(channels) > 0 and channel not in channels:
@@ -130,7 +101,10 @@ class Instrument(EventEmitter):
             if channel:
                 self.subscribe_actions_for_channel(channel, symbol)
 
-    def subscribe_to_secure_instrument_channels(self, symbol, channels):
+    def subscribe_to_secure_instrument_channels(self):
+        channels = self.channels
+        symbol = self.symbol
+
         # Subscribe to all channels by default
         for channel in constants.SECURE_INSTRUMENT_CHANNELS:
             if len(channels) > 0 and channel not in channels:
@@ -148,7 +122,7 @@ class Instrument(EventEmitter):
             else:
                 handler = self.on_action
 
-            self.websocket.subscribe_action(action,
+            self.subscribe_action(action,
                                             channel,
                                             symbol,
                                             handler)
@@ -161,7 +135,7 @@ class Instrument(EventEmitter):
         for channel in self.channels:
             allChannels.append(channel)
 
-        for channel in self.secureChannels:
+        for channel in self.secure_channels:
             allChannels.append(channel)
 
         return allChannels

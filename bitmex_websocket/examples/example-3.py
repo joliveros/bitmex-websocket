@@ -1,8 +1,8 @@
 from __future__ import absolute_import
-from bitmex_websocket.websocket import BitMEXWebsocket
+from bitmex_websocket._bitmex_websocket import BitMEXWebsocket
+from time import sleep
 import logging
 import websocket
-import asyncio
 
 _logger = logging.getLogger('websocket')
 _logger.setLevel(logging.DEBUG)
@@ -10,7 +10,7 @@ websocket.enableTrace(True)
 
 ws = BitMEXWebsocket()
 ws.connect()
-ws.subscribe_action('instrument_')
+ws.subscribe_action('orderBookL2')
 
-loop = asyncio.get_event_loop()
-loop.run_forever()
+while True:
+    sleep(1)

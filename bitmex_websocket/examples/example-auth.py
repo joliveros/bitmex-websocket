@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from bitmex_websocket.websocket import BitMEXWebsocket
+from bitmex_websocket._bitmex_websocket import BitMEXWebsocket
 from time import sleep
 import logging
 import websocket
@@ -9,7 +9,7 @@ _logger.setLevel(logging.DEBUG)
 websocket.enableTrace(True)
 
 ws = BitMEXWebsocket()
-ws.connect(shouldAuth=True)
+ws.connect(should_auth=True)
 ws.subscribe_action('instrument')
 
 while True:
