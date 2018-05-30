@@ -1,7 +1,8 @@
-from types import MethodType
+import traceback
 
 from bitmex_websocket import constants
 from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
+from bitmex_websocket.constants import BaseChannels
 from bitmex_websocket.settings import settings
 from pyee import EventEmitter
 from urllib.parse import urlparse
@@ -33,19 +34,18 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
 
         WebSocketApp.__init__(
             self,
-            self._url,
+            url=self.gen_url(),
+            header=self.header(),
             on_message=self.on_message,
             on_close=self.on_close,
             on_open=self.on_open,
             on_error=self.on_error,
-            header=self.header(),
             on_pong=self.on_pong
         )
 
         self.on('subscribe', self.on_subscribe)
 
-    @property
-    def _url(self):
+    def gen_url(self):
         base_url = settings.BASE_URL
         url_parts = list(urlparse(base_url))
         query_string = ''
@@ -54,9 +54,10 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
             query_string = '?heartbeat=true'
 
         url = "wss://{}/realtime{}".format(url_parts[1], query_string)
+
         return url
 
-    def connect(self):
+    def run_forever(self, **kwargs):
         """Connect to the websocket in a thread."""
 
         # setup websocket.run_forever arguments
@@ -70,39 +71,16 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
 
         alog.debug(ws_run_args)
 
-        self.run_forever(**ws_run_args)
+        super().run_forever(**ws_run_args)
 
     def on_pong(self, ws, message):
         timestamp = float(time.time() * 1000)
         latency = timestamp - (self.last_ping_tm * 1000)
-        alog.debug("message latency: %s" % (latency))
         self.emit('latency', latency)
 
-    def subscribe_action(self, action, channel, instrument, action_handler):
-        alog.info(locals())
-        channelKey = "{}:{}".format(channel, instrument)
-        alog.debug("Subscribe to action: %s" % (channelKey))
-        subscriptionMsg = {"op": "subscribe", "args": [channelKey]}
-        action_event_key = self.gen_action_event_key(action,
-                                                     instrument,
-                                                     channel)
-        alog.debug("Subscribe to %s" % (action_event_key))
-        self.on(action_event_key, action_handler)
-
-        if channelKey not in self.channels:
-            self.channels.append(channelKey)
-            alog.debug(subscriptionMsg)
-            self._send_message(subscriptionMsg)
-
-    def subscribe(self, channel, handler):
-        self._subscribe_to_channel(channel)
-        self.on(channel, handler)
-        if channel not in self.channels:
-            self.channels.append(channel)
-
-    def _subscribe_to_channel(self, channel):
-        subscriptionMsg = {"op": "subscribe", "args": [channel]}
-        self._send_message(subscriptionMsg)
+    def subscribe(self, channel: str):
+        subscription_msg = {"op": "subscribe", "args": [channel]}
+        self._send_message(subscription_msg)
 
     def _send_message(self, message):
         self.send(json.dumps(message))
@@ -119,36 +97,25 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
 
     def on_message(self, ws, message):
         """Handler for parsing WS messages."""
-
         message = json.loads(message)
-        alog.debug(alog.pformat(message))
+
+        if 'error' in message:
+            self.on_error(ws, message['error'])
 
         action = message['action'] if 'action' in message else None
 
         if action:
-            table = message['table']
-            event_name = ''
-            if table in constants.CHANNELS:
-                event_name = "%s:%s" % (action, table)
-            else:
-                if len(message['data']) > 0:
-                    instrument = message['data'][0]['symbol']
-                    event_name = self.gen_action_event_key(action,
-                                                           instrument,
-                                                           table)
-            alog.debug(event_name)
-            self.emit(event_name, message)
+            self.emit('action', message)
+
         elif 'subscribe' in message:
             self.emit('subscribe', message)
+
         elif 'status' in message:
             self.emit('status', message)
 
-    def gen_action_event_key(self, event, instrument, table):
-        return "%s:%s:%s" % (event, instrument, table)
-
     def header(self):
         """Return auth headers. Will use API Keys if present in settings."""
-        alog.debug('shouldAuth: %s' % self.should_auth)
+        auth_header = []
 
         if self.should_auth:
             alog.info("Authenticating with API Key.")
@@ -164,11 +131,8 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
                 "api-signature: " + api_signature,
                 "api-key:" + settings.BITMEX_API_KEY
             ]
-            alog.debug(auth)
 
-            return auth
-        else:
-            return []
+        return auth_header
 
     def on_open(self, ws):
         alog.debug("Websocket Opened.")

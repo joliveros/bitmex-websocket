@@ -1,3 +1,4 @@
+.pytest_cache
 *.py[cod]
 .python-version
 
@@ -29,6 +30,7 @@ coverage.*
 .tox
 nosetests.xml
 htmlcov
+htmlcov/*
 
 # Translations
 *.mo
