@@ -1,10 +1,11 @@
+*.egg-info
 .cache
-__pycache__
-build
-dist
 .coverage
 .env
+.pytest_cache/
+.pytest_cache
 .test-env
+__pycache__/
+build
 coverage.xml
-*.egg-info
 htmlcov

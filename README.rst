@@ -30,28 +30,25 @@ Usage
 
 .. code-block:: python
 
-    from bitmex_websocket import Instrument
-    import asyncio
     import websocket
+
+    from bitmex_websocket import Instrument
+    from bitmex_websocket.constants import InstrumentChannels
 
     websocket.enableTrace(True)
 
-    XBTH17 = Instrument(symbol='XBTH17',
-                        # subscribes to all channels by default, here we
-                        # limit to just these two
-                        channels=['margin', 'orderBook10'],
-                        # you must set your environment variables to authenticate
-                        # see .env.example
-                        shouldAuth=True)
 
-    # Get the latest orderbook
-    orderBook10 = XBTH17.get_table('orderBook10')
+    channels = [
+        InstrumentChannels.quote,
+        InstrumentChannels.trade,
+        InstrumentChannels.orderBookL2
+    ]
 
-    # subscribe to all action events for this instrument
-    XBTH17.on('action', lambda x: print("# action message: %s" % x))
+    XBTUSD = Instrument(symbol='XBTUSD',
+                        channels=channels)
+    XBTUSD.on('action', lambda msg: print(message))
 
-    loop = asyncio.get_event_loop()
-  loop.run_forever()
+    XBTUSD.run_forever()
 
 Examples
 --------
@@ -60,7 +57,7 @@ Run example scripts:
 
 .. code-block:: sh
 
-    $ RUN_ENV=development python -m examples.example-1
+    $ RUN_ENV=development python -m ./examples/example-2.py
 
 Tests
 -----
@@ -68,7 +65,7 @@ Tests
 Testing is set up using `pytest <http://pytest.org>` and coverage is handled
 with the pytest-cov plugin.
 
-Run your tests with `py.test` in the root directory.
+Run your tests with `pytest` in the root directory.
 
 Coverage is ran by default and is set in the `pytest.ini` file.
 To see an html output of coverage open `htmlcov/index.html` after running the tests.
