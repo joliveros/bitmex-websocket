@@ -60,14 +60,6 @@ fi
 git add . --all && git commit -m "$MESSAGE"
 git tag $VERSION -m "$MESSAGE"
 
+git push origin
 
-#    if test $(findstring build:,$(shell git log -1 --pretty=%B)); then \
-#        echo "last commit was result of a build."; else \
-#        make config; \
-#        python -c "from bump_version import bump_patch; bump_patch()"; \
-#        git add . && git commit -m "build: bump patch due to build."; \
-#        git tag $$(eval cat .version) -m "build: bump patch due to build."; \
-#        ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts; \
-#        git push origin; \
-#        make pypi_register; \
-#    fi; \
+upload_pypi
