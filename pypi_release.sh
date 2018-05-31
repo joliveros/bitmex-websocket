@@ -41,6 +41,8 @@ upload_pypi() {
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
+echo $BRANCH
+
 if [ $BRANCH != master ]; then
     echo "you're not on master branch"
     exit 1
