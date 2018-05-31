@@ -7,4 +7,3 @@ script:
 
 after_success:
   - coveralls
-  - ./pypi_release.sh -u $PYPI_USER -p $PYPI_PASS
