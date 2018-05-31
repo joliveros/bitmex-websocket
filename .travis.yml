@@ -6,4 +6,5 @@ script:
   - pip install -r requirements.txt -r requirements-test.txt && pytest
 
 after_success:
-  coveralls
+  - coveralls
+  - ./pypi_release.sh -u $PYPI_USER -p $PYPI_PASS
