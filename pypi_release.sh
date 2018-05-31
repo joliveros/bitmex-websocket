@@ -47,10 +47,10 @@ LAST_LOG=$(git log -1 --pretty=%B)
 
 MESSAGE="build: bump patch due to build."
 
-if [[ $LAST_LOG =~ $MESSAGE ]]; then
-    echo "last commit was result of a build."
-    exit 0
-fi
+#if [[ $LAST_LOG =~ $MESSAGE ]]; then
+#    echo "last commit was result of a build."
+#    exit 0
+#fi
 
 git add . --all && git commit -m "$MESSAGE"
 git tag $VERSION -m "$MESSAGE"
