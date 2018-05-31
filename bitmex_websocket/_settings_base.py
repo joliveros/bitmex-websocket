@@ -7,11 +7,7 @@ import alog
 ################################################################################
 
 # API URL.
-BASE_URL = ''
-if os.environ.get('RUN_ENV') == 'development':
-    BASE_URL = "https://testnet.bitmex.com/api/v1/"
-else:
-    BASE_URL = "https://www.bitmex.com/api/v1/"
+BASE_URL = "https://www.bitmex.com/api/v1/"
 
 # The BitMEX API requires permanent API keys. Go to
 # https://testnet.bitmex.com/api/apiKeys to fill these out.
