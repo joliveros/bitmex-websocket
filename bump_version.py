@@ -11,3 +11,8 @@ def bump_patch():
 
     version_file.truncate()
     version_file.close()
+
+    print(version)
+
+bump_patch()
+
