@@ -41,13 +41,6 @@ upload_pypi() {
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-echo $BRANCH
-
-if [ $BRANCH != master ]; then
-    echo "you're not on master branch"
-    exit 1
-fi
-
 VERSION=$(python ./bump_version.py)
 
 LAST_LOG=$(git log -1 --pretty=%B)
@@ -62,6 +55,7 @@ fi
 git add . --all && git commit -m "$MESSAGE"
 git tag $VERSION -m "$MESSAGE"
 
-git push origin
-
-upload_pypi
+if [ \( $BRANCH == HEAD \) -o \( $BRANCH == master \)]; then
+    git push origin
+    upload_pypi
+fi
