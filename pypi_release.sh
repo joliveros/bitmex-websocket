@@ -57,8 +57,8 @@ if [[ $LAST_LOG =~ $MESSAGE ]]; then
     exit 0
 fi
 
-git add . && git commit -m "$MESSAGE"
-#git tag $VERSION -m $MESSAGE
+git add . --all && git commit -m "$MESSAGE"
+git tag $VERSION -m "$MESSAGE"
 
 
 #    if test $(findstring build:,$(shell git log -1 --pretty=%B)); then \
