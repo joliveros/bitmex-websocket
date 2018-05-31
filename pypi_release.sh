@@ -56,6 +56,6 @@ git add . --all && git commit -m "$MESSAGE"
 git tag $VERSION -m "$MESSAGE"
 
 if [ \( $BRANCH == HEAD \) -o \( $BRANCH == master \) ]; then
-    git push origin
+    git push origin HEAD:master
     upload_pypi
 fi
