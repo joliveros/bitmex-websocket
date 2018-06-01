@@ -1,11 +1,9 @@
+from urllib.parse import urlparse
+
 from requests.auth import AuthBase
 import time
 import hashlib
 import hmac
-from future.builtins import bytes
-from future.standard_library import hooks
-with hooks():  # Python 2/3 compat
-    from urllib.parse import urlparse
 
 
 class APIKeyAuth(AuthBase):

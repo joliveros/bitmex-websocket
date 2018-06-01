@@ -1,3 +1,1 @@
-from .AccessTokenAuth import *
-from .APIKeyAuth import *
-from .APIKeyAuthWithExpires import *
+from .api_key_auth import *

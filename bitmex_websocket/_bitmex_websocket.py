@@ -1,8 +1,5 @@
-import traceback
-
-from bitmex_websocket import constants
-from bitmex_websocket.auth.APIKeyAuth import generate_nonce, generate_signature
-from bitmex_websocket.constants import BaseChannels
+from bitmex_websocket.auth.api_key_auth import generate_nonce,\
+    generate_signature
 from bitmex_websocket.settings import settings
 from pyee import EventEmitter
 from urllib.parse import urlparse

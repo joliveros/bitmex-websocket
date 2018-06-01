@@ -3,7 +3,8 @@ python:
   - "3.6"
 
 script:
-  - pip install -r requirements.txt -r requirements-test.txt && pytest
+  - pip install -r requirements.txt -r requirements-test.txt
+  - pytest ./tests
 
 after_success:
   - coveralls
