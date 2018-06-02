@@ -11,12 +11,13 @@ from os.path import realpath
 def get_reqs_from_file(file):
     file_path = realpath(file)
 
-    # parse_requirements() returns generator of pip.req.InstallRequirement objects
-    install_reqs = parse_requirements(file_path, session=PipSession)
+    # parse_requirements() returns generator of pip.req.InstallRequirement
+    # objects
+    install_requirements = parse_requirements(file_path, session=PipSession)
 
     # reqs is a list of requirement
     # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
-    return [str(ir.req) for ir in install_reqs]
+    return [str(ir.req) for ir in install_requirements]
 
 
 def get_version_info():
