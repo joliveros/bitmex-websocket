@@ -26,7 +26,7 @@ class TestWebsocket(object):
 
         handler = mocker.stub()
         socket.on('subscribe', handler)
-        socket.on_message({}, json.dumps(message))
+        socket.on_message(json.dumps(message))
         handler.assert_called_once()
 
     def test_subscribe_instrument_on_message(self, mocker):
@@ -45,7 +45,7 @@ class TestWebsocket(object):
         def handler(message):
             subscribe_handler(message)
 
-        socket.on_message({}, json.dumps(message))
+        socket.on_message(json.dumps(message))
 
         subscribe_handler.assert_called_once_with(message)
 
@@ -85,6 +85,6 @@ class TestWebsocket(object):
             }
         }
 
-        socket.on_message({}, json.dumps(message))
-        error.assert_called_with({}, "Unknown table: instrument_")
+        socket.on_message(json.dumps(message))
+        error.assert_called_with("Unknown table: instrument_")
 
