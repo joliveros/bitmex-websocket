@@ -70,7 +70,7 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
 
         super().run_forever(**ws_run_args)
 
-    def on_pong(self, ws, message):
+    def on_pong(self, message):
         timestamp = float(time.time() * 1000)
         latency = timestamp - (self.last_ping_tm * 1000)
         self.emit('latency', latency)
@@ -92,12 +92,12 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
         else:
             raise Exception('Unable to subsribe.')
 
-    def on_message(self, ws, message):
+    def on_message(self, message):
         """Handler for parsing WS messages."""
         message = json.loads(message)
 
         if 'error' in message:
-            self.on_error(ws, message['error'])
+            self.on_error(message['error'])
 
         action = message['action'] if 'action' in message else None
 
@@ -131,13 +131,13 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
 
         return auth_header
 
-    def on_open(self, ws):
+    def on_open(self):
         alog.debug("Websocket Opened.")
         self.emit('open')
 
-    def on_close(self, ws):
+    def on_close(self):
         alog.info('Websocket Closed')
 
-    def on_error(self, ws, error):
+    def on_error(self, error):
         raise BitMEXWebsocketConnectionError(error)
 
