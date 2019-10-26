@@ -123,7 +123,7 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
             api_signature = generate_signature(
                 settings.BITMEX_API_SECRET, 'GET', '/realtime', nonce, '')
 
-            auth = [
+            auth_header = [
                 "api-nonce: " + str(nonce),
                 "api-signature: " + api_signature,
                 "api-key:" + settings.BITMEX_API_KEY
