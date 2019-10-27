@@ -35,8 +35,8 @@ fi
 
 upload_pypi() {
     rm -rf ./dist
-    python ./setup.py clean
-    python ./setup.py bdist_egg bdist_wheel dist_info upload -r pypi
+    ./setup.py clean
+    ./setup.py bdist_egg bdist_wheel dist_info upload -r pypi
 }
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
