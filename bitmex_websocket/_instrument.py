@@ -20,8 +20,9 @@ class Instrument(BitMEXWebsocket):
     def __init__(self,
                  symbol: str='XBTUSD',
                  channels: [Channels] or [str]=None,
-                 should_auth=False):
-        BitMEXWebsocket.__init__(self, should_auth)
+                 should_auth=False, **kwargs):
+
+        super().__init__(should_auth=should_auth, **kwargs)
 
         if channels is None:
             raise SubscribeToAtLeastOneChannelException()

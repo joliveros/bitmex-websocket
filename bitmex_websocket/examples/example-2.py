@@ -1,18 +1,35 @@
-import websocket
+#!/usr/bin/env python
 
 from bitmex_websocket import Instrument
 from bitmex_websocket.constants import InstrumentChannels
 
-websocket.enableTrace(True)
+import alog
+import logging
+import signal
+import websocket
 
 
-channels = [
-    InstrumentChannels.quote,
-    InstrumentChannels.trade,
-    InstrumentChannels.orderBookL2
-]
+class Ticker(Instrument):
+    def __init__(self, symbol='XBTUSD', **kwargs):
+        websocket.enableTrace(True)
 
-XBTUSD = Instrument(symbol='XBTUSD',
-                    channels=channels)
+        channels = [
+            InstrumentChannels.quote,
+        ]
 
-XBTUSD.run_forever()
+        super().__init__(symbol=symbol, channels=channels, **kwargs)
+
+    def on_action(self, message):
+        alog.info(alog.pformat(message['data']))
+
+
+def main():
+    emitter = Ticker('XBTUSD')
+    emitter.run_forever()
+
+
+if __name__ == '__main__':
+    alog.set_level(logging.DEBUG)
+    signal.signal(signal.SIGINT, lambda: exit(0))
+    signal.signal(signal.SIGTERM, lambda: exit(0))
+    main()

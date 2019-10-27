@@ -17,9 +17,18 @@ class BitMEXWebsocketConnectionError(Exception):
     pass
 
 
-class BitMEXWebsocket(EventEmitter, WebSocketApp):
-    def __init__(self, should_auth=False, heartbeat=True, ping_interval=10,
-                 ping_timeout=9):
+class BitMEXWebsocket(
+    WebSocketApp,
+    EventEmitter
+):
+    def __init__(
+        self,
+        should_auth=False,
+        heartbeat=True,
+        ping_interval=10,
+        ping_timeout=9,
+        **kwargs
+    ):
         self.ping_timeout = ping_timeout
         self.ping_interval = ping_interval
         self.should_auth = should_auth
@@ -27,18 +36,17 @@ class BitMEXWebsocket(EventEmitter, WebSocketApp):
         self.channels = []
         self.reconnect_count = 0
 
-        EventEmitter.__init__(self)
-
-        WebSocketApp.__init__(
-            self,
+        super().__init__(
             url=self.gen_url(),
             header=self.header(),
             on_message=self.on_message,
             on_close=self.on_close,
             on_open=self.on_open,
             on_error=self.on_error,
-            on_pong=self.on_pong
+            on_pong=self.on_pong,
+            **kwargs
         )
+        super(EventEmitter, self).__init__()
 
         self.on('subscribe', self.on_subscribe)
 
