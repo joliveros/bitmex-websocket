@@ -41,7 +41,7 @@ class Instrument(BitMEXWebsocket):
 
     def subscribe_channels(self):
         for channel in self.channels:
-            channel_key = f'{channel.name}:{self.symbol.value}'
+            channel_key = f'{channel.name}:{self.symbol}'
             self.subscribe(channel_key)
 
     def on_action(self, message):
