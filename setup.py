@@ -35,7 +35,7 @@ setup(name='bitmex_websocket',
       packages=[
         'bitmex_websocket',
         'bitmex_websocket.auth',
-        # 'bitmex_websocket.dist-info'
+        'bitmex_websocket.dist-info'
       ],
       install_requires=get_reqs_from_file('./requirements.txt'),
       include_package_data=True,
