@@ -34,8 +34,7 @@ setup(name='bitmex_websocket',
       url='https://github.com/joliveros/bitmex-websocket',
       packages=[
         'bitmex_websocket',
-        'bitmex_websocket.auth',
-        'bitmex_websocket.dist-info'
+        'bitmex_websocket.auth'
       ],
       install_requires=get_reqs_from_file('./requirements.txt'),
       include_package_data=True,
