@@ -5,3 +5,4 @@ semver
 setuptools
 websocket-client
 wheel
+click

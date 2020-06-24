@@ -1,9 +1,13 @@
+#!/usr/bin/env python
+import logging
+
 import alog
 
 from bitmex_websocket._bitmex_websocket import BitMEXWebsocket
 
 from bitmex_websocket.constants import Channels, SecureChannels, \
-    SecureInstrumentChannels
+    SecureInstrumentChannels, InstrumentChannels
+import click
 
 __all__ = ['Instrument']
 
@@ -18,8 +22,8 @@ class SubscribeToSecureChannelException(Exception):
 
 class Instrument(BitMEXWebsocket):
     def __init__(self,
-                 symbol: str='XBTUSD',
-                 channels: [Channels] or [str]=None,
+                 symbol: str = 'XBTUSD',
+                 channels: [Channels] or [str] = None,
                  should_auth=False, **kwargs):
 
         super().__init__(should_auth=should_auth, **kwargs)
@@ -50,3 +54,26 @@ class Instrument(BitMEXWebsocket):
     def _channels_contains_secure(self):
         secure_channels = list(SecureChannels) + list(SecureInstrumentChannels)
         return not set(secure_channels).isdisjoint(self.channels)
+
+
+@click.command()
+@click.argument('symbol', type=str, default='XBTUSD')
+def main(symbol: str, **kwargs):
+    alog.set_level(logging.DEBUG)
+
+    channels = [
+        # InstrumentChannels.quote,
+        InstrumentChannels.trade,
+        InstrumentChannels.orderBookL2
+    ]
+    instrument = Instrument(
+        symbol=symbol,
+        channels=channels,
+        **kwargs
+    )
+
+    instrument.run_forever()
+
+
+if __name__ == '__main__':
+    main()
