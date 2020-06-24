@@ -126,7 +126,8 @@ class BitMEXWebsocket(
             alog.info("Authenticating with API Key.")
             # To auth to the WS using an API key, we generate a signature
             # of a nonce and the WS API endpoint.
-            alog.debug(settings.BITMEX_API_KEY)
+            alog.info((settings.BITMEX_API_KEY, settings.BITMEX_API_SECRET))
+
             nonce = generate_nonce()
             api_signature = generate_signature(
                 settings.BITMEX_API_SECRET, 'GET', '/realtime', nonce, '')
@@ -136,6 +137,8 @@ class BitMEXWebsocket(
                 "api-signature: " + api_signature,
                 "api-key:" + settings.BITMEX_API_KEY
             ]
+
+            alog.info(alog.pformat(auth_header))
 
         return auth_header
 
