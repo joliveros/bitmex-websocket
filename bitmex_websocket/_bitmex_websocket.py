@@ -121,6 +121,7 @@ class BitMEXWebsocket(
     def header(self):
         """Return auth headers. Will use API Keys if present in settings."""
         auth_header = []
+        alog.info(f'### should auth {self.should_auth} ###')
 
         if self.should_auth:
             alog.info("Authenticating with API Key.")
