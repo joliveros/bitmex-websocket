@@ -141,6 +141,8 @@ class BitMEXWebsocket(
 
             alog.info(alog.pformat(auth_header))
 
+        raise Exception()
+
         return auth_header
 
     def on_open(self):
