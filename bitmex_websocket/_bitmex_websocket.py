@@ -46,7 +46,7 @@ class BitMEXWebsocket(
             on_pong=self.on_pong,
             **kwargs
         )
-        super(EventEmitter, self).__init__()
+        EventEmitter.__init__(self)
 
         self.on('subscribe', self.on_subscribe)
 
