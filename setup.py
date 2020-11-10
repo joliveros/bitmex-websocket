@@ -17,7 +17,7 @@ setup(name='bitmex_websocket',
         'bitmex_websocket',
         'bitmex_websocket.auth'
       ],
-      install_requires=['alog', 'pyee', 'requests', 'websocket-client' 'click'],
+      install_requires=['alog', 'pyee', 'requests', 'websocket-client', 'click'],
       include_package_data=True,
       tests_require=['flake8', 'mock', 'pytest', 'pytest-mock', 'pytest-cov'],
       license='MIT License',
