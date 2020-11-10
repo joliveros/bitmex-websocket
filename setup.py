@@ -20,13 +20,8 @@ def get_reqs_from_file(file):
     return [str(ir.req) for ir in install_requirements]
 
 
-def get_version_info():
-    version_file = open(realpath('./.version'))
-    return version_file.read()
-
-
 setup(name='bitmex_websocket',
-      version=get_version_info(),
+      version='0.2.78',
       description='Bitmex websocket API',
       long_description=open('README.rst').read().strip(),
       author='José Oliveros',
