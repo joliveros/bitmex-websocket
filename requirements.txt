@@ -1,8 +1,5 @@
 alog
 pyee
 requests
-semver
-setuptools
 websocket-client
-wheel
 click
