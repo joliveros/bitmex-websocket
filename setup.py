@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 # -*- coding: utf-8 -*-
-
+from pip._internal.download import PipSession
+from pkg_resources import parse_requirements
 from setuptools import setup
-from pip.req import parse_requirements
-from pip.download import PipSession
 from os.path import realpath
 
 
