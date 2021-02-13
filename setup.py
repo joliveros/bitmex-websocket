@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 # -*- coding: utf-8 -*-
-from pip._internal.download import PipSession
 from pkg_resources import parse_requirements
 from setuptools import setup
 from os.path import realpath
@@ -12,7 +11,7 @@ def get_reqs_from_file(file):
 
     # parse_requirements() returns generator of pip.req.InstallRequirement
     # objects
-    install_requirements = parse_requirements(file_path, session=PipSession)
+    install_requirements = parse_requirements(file_path)
 
     # reqs is a list of requirement
     # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
