@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # -*- coding: utf-8 -*-
+import alog
 from pkg_resources import parse_requirements
 from setuptools import setup
 from os.path import realpath
@@ -11,11 +12,9 @@ def get_reqs_from_file(file):
 
     # parse_requirements() returns generator of pip.req.InstallRequirement
     # objects
-    install_requirements = parse_requirements(file_path)
-
-    # reqs is a list of requirement
-    # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
-    return [str(ir.req) for ir in install_requirements]
+    with open(file_path) as req_file_contents:
+        install_requirements = req_file_contents.readlines()
+        return [req.strip() for req in install_requirements]
 
 
 def get_version_info():
