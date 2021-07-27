@@ -23,7 +23,7 @@ def get_version_info():
 
 
 setup(name='bitmex_websocket',
-      version=get_version_info(),
+      version='0.2.83',
       description='Bitmex websocket API',
       long_description=open('README.rst').read().strip(),
       author='José Oliveros',
