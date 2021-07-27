@@ -65,18 +65,13 @@ class BitMEXWebsocket(
     def run_forever(self, **kwargs):
         """Connect to the websocket in a thread."""
 
-        # setup websocket.run_forever arguments
-        ws_run_args = {
-            'sslopt': {"cert_reqs": ssl.CERT_NONE}
-        }
-
         if self.heartbeat:
-            ws_run_args['ping_timeout'] = self.ping_timeout
-            ws_run_args['ping_interval'] = self.ping_interval
+            kwargs['ping_timeout'] = self.ping_timeout
+            kwargs['ping_interval'] = self.ping_interval
 
-        alog.debug(ws_run_args)
+        alog.debug(kwargs)
 
-        super().run_forever(**ws_run_args)
+        super().run_forever(**kwargs)
 
     def on_pong(self, message):
         timestamp = float(time.time() * 1000)
