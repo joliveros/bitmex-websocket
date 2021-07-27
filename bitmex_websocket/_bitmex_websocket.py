@@ -73,10 +73,11 @@ class BitMEXWebsocket(
 
         super().run_forever(**kwargs)
 
-    def on_pong(self, message):
+    @staticmethod
+    def on_pong(instanse, message):
         timestamp = float(time.time() * 1000)
-        latency = timestamp - (self.last_ping_tm * 1000)
-        self.emit('latency', latency)
+        latency = timestamp - (instanse.last_ping_tm * 1000)
+        instanse.emit('latency', latency)
 
     def subscribe(self, channel: str):
         subscription_msg = {"op": "subscribe", "args": [channel]}
@@ -95,23 +96,24 @@ class BitMEXWebsocket(
         else:
             raise Exception('Unable to subsribe.')
 
-    def on_message(self, message):
+    @staticmethod
+    def on_message(instanse, message):
         """Handler for parsing WS messages."""
         message = json.loads(message)
 
         if 'error' in message:
-            self.on_error(message['error'])
+            instanse.on_error(instanse, message['error'])
 
         action = message['action'] if 'action' in message else None
 
         if action:
-            self.emit('action', message)
+            instanse.emit('action', message)
 
         elif 'subscribe' in message:
-            self.emit('subscribe', message)
+            instanse.emit('subscribe', message)
 
         elif 'status' in message:
-            self.emit('status', message)
+            instanse.emit('status', message)
 
     def header(self):
         """Return auth headers. Will use API Keys if present in settings."""
@@ -138,13 +140,15 @@ class BitMEXWebsocket(
 
         return auth_header
 
-    def on_open(self):
+    @staticmethod
+    def on_open(instanse):
         alog.debug("Websocket Opened.")
-        self.emit('open')
+        instanse.emit('open')
 
-    def on_close(self):
+    @staticmethod
+    def on_close(instanse):
         alog.info('Websocket Closed')
 
-    def on_error(self, error):
+    @staticmethod
+    def on_error(instanse, error):
         raise BitMEXWebsocketConnectionError(error)
-
