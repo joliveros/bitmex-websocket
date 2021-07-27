@@ -16,11 +16,6 @@ def get_reqs_from_file(file):
         return [req.strip() for req in install_requirements]
 
 
-def get_version_info():
-    version_file = open(realpath('./.version'))
-    return version_file.read()
-
-
 setup(name='bitmex_websocket',
       version=open(realpath('./.version')).read(),
       description='Bitmex websocket API',
