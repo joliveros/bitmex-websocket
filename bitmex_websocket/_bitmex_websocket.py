@@ -146,7 +146,7 @@ class BitMEXWebsocket(
         instanse.emit('open')
 
     @staticmethod
-    def on_close(instanse):
+    def on_close(instanse, *args):
         alog.info('Websocket Closed')
 
     @staticmethod
