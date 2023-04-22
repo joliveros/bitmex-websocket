@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 # -*- coding: utf-8 -*-
-import alog
 from pkg_resources import parse_requirements
 from setuptools import setup
 from os.path import realpath
@@ -17,13 +16,8 @@ def get_reqs_from_file(file):
         return [req.strip() for req in install_requirements]
 
 
-def get_version_info():
-    version_file = open(realpath('./.version'))
-    return version_file.read()
-
-
 setup(name='bitmex_websocket',
-      version=get_version_info(),
+      version=open(realpath('./.version')).read(),
       description='Bitmex websocket API',
       long_description=open('README.rst').read().strip(),
       author='José Oliveros',

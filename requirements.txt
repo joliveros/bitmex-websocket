@@ -3,6 +3,6 @@ pyee
 requests
 semver
 setuptools
-websocket-client
+websocket-client>=1
 wheel
 click
