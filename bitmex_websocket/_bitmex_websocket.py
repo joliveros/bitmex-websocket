@@ -97,23 +97,23 @@ class BitMEXWebsocket(
             raise Exception('Unable to subsribe.')
 
     @staticmethod
-    def on_message(instanse, message):
+    def on_message(instance, message, *args):
         """Handler for parsing WS messages."""
         message = json.loads(message)
 
         if 'error' in message:
-            instanse.on_error(instanse, message['error'])
+            instance.on_error(instance, message['error'])
 
         action = message['action'] if 'action' in message else None
 
         if action:
-            instanse.emit('action', message)
+            instance.emit('action', message)
 
         elif 'subscribe' in message:
-            instanse.emit('subscribe', message)
+            instance.emit('subscribe', message)
 
         elif 'status' in message:
-            instanse.emit('status', message)
+            instance.emit('status', message)
 
     def header(self):
         """Return auth headers. Will use API Keys if present in settings."""
@@ -141,14 +141,15 @@ class BitMEXWebsocket(
         return auth_header
 
     @staticmethod
-    def on_open(instanse):
+    def on_open(instance):
         alog.debug("Websocket Opened.")
-        instanse.emit('open')
+        instance.emit('open')
 
     @staticmethod
-    def on_close(instanse, *args):
+    def on_close(instance, *args):
         alog.info('Websocket Closed')
 
     @staticmethod
-    def on_error(instanse, error):
+    def on_error(instance, error):
+        alog.info('Websocket Closed')
         raise BitMEXWebsocketConnectionError(error)

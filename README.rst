@@ -1,11 +1,5 @@
 bitmex-websocket
 ================
-.. image:: https://api.travis-ci.org/joliveros/bitmex-websocket.svg?branch=master
-    :target: https://travis-ci.org/joliveros/bitmex-websocket
-.. image:: https://requires.io/github/joliveros/bitmex-websocket/requirements.svg?branch=master
-    :target: https://requires.io/github/joliveros/bitmex-websocket/requirements?branch=master
-.. image:: https://coveralls.io/repos/joliveros/bitmex-websocket/badge.svg?branch=master
-    :target: https://coveralls.io/r/joliveros/bitmex-websocket?branch=master
 
 Install
 -------
@@ -57,7 +51,7 @@ Run example scripts:
 
 .. code-block:: sh
 
-    $ RUN_ENV=development python -m ./examples/example-2.py
+    $ ./examples/example.py
 
 Tests
 -----

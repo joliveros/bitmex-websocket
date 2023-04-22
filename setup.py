@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# -*- coding: utf-8 -*-
-from pkg_resources import parse_requirements
 from setuptools import setup
 from os.path import realpath
 
@@ -9,8 +7,6 @@ from os.path import realpath
 def get_reqs_from_file(file):
     file_path = realpath(file)
 
-    # parse_requirements() returns generator of pip.req.InstallRequirement
-    # objects
     with open(file_path) as req_file_contents:
         install_requirements = req_file_contents.readlines()
         return [req.strip() for req in install_requirements]
@@ -38,5 +34,5 @@ setup(name='bitmex_websocket',
         'Intended Audience :: Developers',
         'Topic :: Software Development',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.11',
       ])

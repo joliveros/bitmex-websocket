@@ -7,7 +7,6 @@ import hmac
 
 
 class APIKeyAuth(AuthBase):
-
     '''Attaches API Key Authentication to the given Request object.'''
 
     def __init__(self, apiKey, apiSecret):
@@ -21,7 +20,9 @@ class APIKeyAuth(AuthBase):
         nonce = generate_nonce()
         r.headers['api-nonce'] = str(nonce)
         r.headers['api-key'] = self.apiKey
-        r.headers['api-signature'] = generate_signature(self.apiSecret, r.method, r.url, nonce, r.body or '')
+        r.headers['api-signature'] = generate_signature(self.apiSecret,
+                                                        r.method, r.url, nonce,
+                                                        r.body or '')
 
         return r
 
@@ -32,8 +33,9 @@ def generate_nonce():
 
 # Generates an API signature.
 # A signature is HMAC_SHA256(secret, verb + path + nonce + data), hex encoded.
-# Verb must be uppercased, url is relative, nonce must be an increasing 64-bit integer
-# and the data, if present, must be JSON without whitespace between keys.
+# Verb must be uppercased, url is relative, nonce must be an increasing 64-bit
+# integer and the data, if present, must be JSON without whitespace between
+# keys.
 #
 # For example, in psuedocode (and in real code below):
 #
@@ -41,17 +43,20 @@ def generate_nonce():
 # url=/api/v1/order
 # nonce=1416993995705
 # data={"symbol":"XBTZ14","quantity":1,"price":395.01}
-# signature = HEX(HMAC_SHA256(secret, 'POST/api/v1/order1416993995705{"symbol":"XBTZ14","quantity":1,"price":395.01}'))
+# signature = \
+# HEX(HMAC_SHA256(secret,
+# 'POST/api/v1/order1416993995705{"symbol":"XBTZ14","quantity":1,"price":395.01}'))
 def generate_signature(secret, verb, url, nonce, data):
     '''Generate a request signature compatible with BitMEX.'''
     # Parse the url so we can remove the base and extract just the path.
-    parsedURL = urlparse(url)
-    path = parsedURL.path
-    if parsedURL.query:
-        path = path + '?' + parsedURL.query
+    parsed_url = urlparse(url)
+    path = parsed_url.path
+    if parsed_url.query:
+        path = path + '?' + parsed_url.query
 
     # print "Computing HMAC: %s" % verb + path + str(nonce) + data
     message = verb + path + str(nonce) + data
 
-    signature = hmac.new(bytes(secret, 'utf8'), bytes(message, 'utf8'), digestmod=hashlib.sha256).hexdigest()
+    signature = hmac.new(bytes(secret, 'utf8'), bytes(message, 'utf8'),
+                         digestmod=hashlib.sha256).hexdigest()
     return signature

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-import logging
 
-import alog
 
 from bitmex_websocket._bitmex_websocket import BitMEXWebsocket
-
 from bitmex_websocket.constants import Channels, SecureChannels, \
     SecureInstrumentChannels, InstrumentChannels
+
+import alog
 import click
+import logging
 
 __all__ = ['Instrument']
 
