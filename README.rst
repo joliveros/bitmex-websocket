@@ -62,27 +62,6 @@ Run example scripts:
     $ ./examples/example.py
 
 
-Output:
-
-.. code-block:: sh
-    2023-04-22 18:11:02 INFO  [examples.example:23] 
-    [{'askPrice': 27778.0,
-      'askSize': 68200,
-      'bidPrice': 27777.5,
-      'bidSize': 11400,
-      'symbol': 'XBTUSD',
-      'timestamp': '2023-04-23T00:11:02.184Z'}]
-    ++Rcv raw: b'\x81~\x00\xad{"table":"quote","action":"insert","data":[{"timestamp":"2023-04-23T00:11:02.192Z","symbol":"XBTUSD","bidSize":11400,"bidPrice":27777.5,"askPrice":27778.0,"askSize":74700}]}'
-    ++Rcv decoded: fin=1 opcode=1 data=b'{"table":"quote","action":"insert","data":[{"timestamp":"2023-04-23T00:11:02.192Z","symbol":"XBTUSD","bidSize":11400,"bidPrice":27777.5,"askPrice":27778.0,"askSize":74700}]}'
-    2023-04-22 18:11:02 INFO  [examples.example:23] 
-    [{'askPrice': 27778.0,
-      'askSize': 74700,
-      'bidPrice': 27777.5,
-      'bidSize': 11400,
-      'symbol': 'XBTUSD',
-      'timestamp': '2023-04-23T00:11:02.192Z'}]
-
-
 Tests
 -----
 
