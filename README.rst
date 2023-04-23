@@ -44,6 +44,14 @@ Usage
 
     XBTUSD.run_forever()
 
+TestNet
+--------
+
+You may change the `BASE_URL` by setting the `BITMEX_BASE_URL` environment variable to:
+`https://testnet.bitmex.com/api/v1/`.
+
+
+
 Examples
 --------
 
