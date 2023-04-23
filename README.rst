@@ -40,7 +40,7 @@ Usage
 
     XBTUSD = Instrument(symbol='XBTUSD',
                         channels=channels)
-    XBTUSD.on('action', lambda msg: print(message))
+    XBTUSD.on('action', lambda msg: print(msg))
 
     XBTUSD.run_forever()
 
