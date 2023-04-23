@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bitmex_websocket"
+version = "0.3.2"
+authors = [
+  { name="Jose Oliveros", email="jose.oliveros.1983@gmail.com" },
+]
+description = "Bitmex websocket API"
+readme = "README.rst"
+requires-python = ">=3.7"
+dynamic=["dependencies"]
+keywords=["bitmex", "websocket", "bot", "cryptocurrency"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+license = {file = "LICENSE"}
+
+[project.urls]
+"Homepage" = "https://github.com/joliveros/bitmex-websocket"
+"Bug Tracker" = "https://github.com/joliveros/bitmex-websocket/issues"
