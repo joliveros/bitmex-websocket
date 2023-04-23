@@ -31,7 +31,7 @@ rfc3986==2.0.0
 rich==13.3.4
 SecretStorage==3.3.3
 semver==3.0.0
-setuptools==65.5.0
+setuptools==65.5.1
 six==1.16.0
 twine==4.0.2
 typing_extensions==4.5.0
